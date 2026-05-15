@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Skill Binimoy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header"><div class="logo" onclick="window.location.href='index.html'" style="cursor:pointer"><svg viewBox="0 0 50 50" fill="none" width="32" height="32"><circle cx="25" cy="25" r="23" stroke="url(#gsd)" stroke-width="3"/><path d="M15 25 L25 15 L35 25 L25 35 Z" fill="url(#gsd)"/><defs><linearGradient id="gsd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6C63FF"/><stop offset="100%" style="stop-color:#00C2FF"/></linearGradient></defs></svg><span>Skill Binimoy</span></div></div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></a>
+            <a href="marketplace.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span>Marketplace</span></a>
+            <a href="requests.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Requests</span></a>
+            <a href="sessions.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Sessions</span></a>
+            <a href="chat.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span>Messages</span></a>
+            <a href="profile.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></a>
+        </nav>
+        <div class="sidebar-footer"><a href="#" class="nav-item logout" id="logoutBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Logout</span></a></div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <div class="search-bar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search skills, users..."></div>
+            <div class="top-bar-actions">
+                <button class="theme-toggle" id="themeToggle"><svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+                <div class="user-menu"><div class="user-avatar user-initials" style="cursor:pointer" onclick="window.location.href='profile.html'">?</div></div>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <h1 id="welcomeMsg" style="margin-bottom:0.5rem">Welcome Back!</h1>
+            <p style="color:var(--text-secondary);margin-bottom:2rem">Here's what's happening with your skill exchanges</p>
+
+            <div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin-bottom:2rem">
+                <div class="dashboard-card" style="display:flex;align-items:center;gap:1rem;padding:1.5rem">
+                    <div style="width:48px;height:48px;border-radius:12px;background:rgba(108,99,255,0.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem">👥</div>
+                    <div><div id="statUsers" style="font-size:1.75rem;font-weight:700">...</div><div style="color:var(--text-secondary);font-size:0.875rem">Total Users</div></div>
+                </div>
+                <div class="dashboard-card" style="display:flex;align-items:center;gap:1rem;padding:1.5rem">
+                    <div style="width:48px;height:48px;border-radius:12px;background:rgba(0,194,255,0.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem">🎯</div>
+                    <div><div id="statMySkills" style="font-size:1.75rem;font-weight:700">...</div><div style="color:var(--text-secondary);font-size:0.875rem">My Skills</div></div>
+                </div>
+                <div class="dashboard-card" style="display:flex;align-items:center;gap:1rem;padding:1.5rem">
+                    <div style="width:48px;height:48px;border-radius:12px;background:rgba(16,185,129,0.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem">📨</div>
+                    <div><div id="statRequests" style="font-size:1.75rem;font-weight:700">...</div><div style="color:var(--text-secondary);font-size:0.875rem">Pending Requests</div></div>
+                </div>
+                <div class="dashboard-card" style="display:flex;align-items:center;gap:1rem;padding:1.5rem">
+                    <div style="width:48px;height:48px;border-radius:12px;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem">📅</div>
+                    <div><div id="statSessions" style="font-size:1.75rem;font-weight:700">...</div><div style="color:var(--text-secondary);font-size:0.875rem">Upcoming Sessions</div></div>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+                <div class="dashboard-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                        <h3 style="margin:0">Recent Requests</h3>
+                        <a href="requests.html" style="color:#6C63FF;font-size:0.875rem">View All</a>
+                    </div>
+                    <div id="recentRequests"><p style="color:var(--text-secondary)">Loading...</p></div>
+                </div>
+                <div class="dashboard-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                        <h3 style="margin:0">Upcoming Sessions</h3>
+                        <a href="sessions.html" style="color:#6C63FF;font-size:0.875rem">View All</a>
+                    </div>
+                    <div id="upcomingSessions"><p style="color:var(--text-secondary)">Loading...</p></div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/auth.js"></script>
+<script>
+(function() {
+    const API = window.API_URL;
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (user.full_name) document.getElementById('welcomeMsg').textContent = `Welcome Back, ${user.full_name.split(' ')[0]}!`;
+
+    // Load profile for skills count
+    fetch(API + '/api/users/profile', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(r => r.json()).then(d => {
+            const u = d.user;
+            const skillCount = (u.skills_teach || []).length + (u.skills_learn || []).length;
+            document.getElementById('statMySkills').textContent = skillCount;
+            // Update avatar
+            document.querySelectorAll('.user-avatar, .user-initials').forEach(el => {
+                if (!el.querySelector('img')) {
+                    const parts = (u.full_name||'U').split(' ');
+                    el.textContent = parts.map(p=>p[0]).join('').toUpperCase().slice(0,2);
+                }
+            });
+        });
+
+    // Load users count
+    fetch(API + '/api/users/all', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(r => r.json()).then(d => document.getElementById('statUsers').textContent = (d.users||[]).length + 1);
+
+    // Load requests
+    fetch(API + '/api/users/requests', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(r => r.json()).then(d => {
+            const reqs = d.requests || [];
+            const pending = reqs.filter(r => r.status === 'Pending');
+            document.getElementById('statRequests').textContent = pending.length;
+            const el = document.getElementById('recentRequests');
+            if (!reqs.length) { el.innerHTML = '<p style="color:var(--text-secondary);font-size:0.875rem">No requests yet.</p>'; return; }
+            el.innerHTML = reqs.slice(0, 3).map(r => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--border,#2a2a3a)">
+                    <div><p style="margin:0;font-weight:500;font-size:0.9rem">${r.sender_name}</p><p style="margin:0;color:var(--text-secondary);font-size:0.8rem">${r.offered_skill||'Skill Exchange'}</p></div>
+                    <span style="background:${r.status==='Pending'?'#f59e0b22':'#10b98122'};color:${r.status==='Pending'?'#f59e0b':'#10b981'};padding:2px 10px;border-radius:20px;font-size:0.75rem">${r.status}</span>
+                </div>`).join('');
+        });
+
+    // Load sessions
+    fetch(API + '/api/users/sessions', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(r => r.json()).then(d => {
+            const sessions = (d.sessions || []).filter(s => s.status === 'Upcoming');
+            document.getElementById('statSessions').textContent = sessions.length;
+            const el = document.getElementById('upcomingSessions');
+            if (!sessions.length) { el.innerHTML = '<p style="color:var(--text-secondary);font-size:0.875rem">No upcoming sessions.</p>'; return; }
+            el.innerHTML = sessions.slice(0, 3).map(s => {
+                const myId = user.id;
+                const partner = s.sender_id == myId ? s.receiver_name : s.sender_name;
+                const dt = new Date(s.scheduled_at);
+                return `<div style="padding:0.75rem 0;border-bottom:1px solid var(--border,#2a2a3a)">
+                    <p style="margin:0;font-weight:500;font-size:0.9rem">${s.offered_skill} ↔ ${s.requested_skill}</p>
+                    <p style="margin:0;color:var(--text-secondary);font-size:0.8rem">with ${partner} · ${dt.toLocaleDateString()}</p>
+                </div>`;
+            }).join('');
+        });
+})();
+</script>
+</body>
+</html>

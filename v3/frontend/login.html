@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Skill Binimoy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<div class="auth-container">
+    <div class="animated-bg">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
+    </div>
+    <div class="auth-wrapper">
+        <div class="auth-card glass-card">
+            <div class="auth-header">
+                <div class="logo" onclick="window.location.href='index.html'" style="cursor:pointer;justify-content:center;display:flex;align-items:center;gap:8px;margin-bottom:1rem">
+                    <svg viewBox="0 0 50 50" fill="none" width="36" height="36"><circle cx="25" cy="25" r="23" stroke="url(#gl1)" stroke-width="3"/><path d="M15 25 L25 15 L35 25 L25 35 Z" fill="url(#gl1)"/><defs><linearGradient id="gl1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6C63FF"/><stop offset="100%" style="stop-color:#00C2FF"/></linearGradient></defs></svg>
+                    <span style="font-size:1.25rem;font-weight:700">Skill Binimoy</span>
+                </div>
+                <h2>Welcome Back</h2>
+                <p>Sign in to continue your skill exchange journey</p>
+            </div>
+            <div id="errorMsg" style="display:none;background:#ef444422;color:#ef4444;padding:10px 14px;border-radius:8px;margin-bottom:1rem;font-size:0.9rem"></div>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" placeholder="your@email.com" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <div style="position:relative">
+                    <input type="password" id="password" placeholder="••••••••" class="form-control">
+                    <button onclick="togglePass('password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-secondary)">👁</button>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-full" id="loginBtn" style="width:100%;margin-top:0.5rem">Sign In</button>
+            <p style="text-align:center;margin-top:1.25rem;color:var(--text-secondary)">Don't have an account? <a href="register.html" style="color:#6C63FF;font-weight:500">Sign Up</a></p>
+        </div>
+    </div>
+</div>
+<script src="js/config.js"></script>
+<script>
+function togglePass(id, btn) {
+    const el = document.getElementById(id);
+    el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+// If already logged in, go to dashboard
+if (localStorage.getItem('token')) window.location.href = 'dashboard.html';
+
+document.getElementById('loginBtn').addEventListener('click', async function() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const errEl = document.getElementById('errorMsg');
+    errEl.style.display = 'none';
+
+    if (!email || !password) { errEl.textContent = 'Please fill in all fields.'; errEl.style.display = 'block'; return; }
+
+    this.textContent = 'Signing in...'; this.disabled = true;
+    try {
+        const r = await fetch(window.API_URL + '/api/users/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const d = await r.json();
+        if (r.ok) {
+            localStorage.setItem('token', d.token);
+            localStorage.setItem('user', JSON.stringify(d.user));
+            window.location.href = 'dashboard.html';
+        } else {
+            errEl.textContent = d.message || 'Login failed. Please try again.';
+            errEl.style.display = 'block';
+        }
+    } catch(e) {
+        errEl.textContent = 'Cannot connect to server. Please try again.';
+        errEl.style.display = 'block';
+    } finally {
+        this.textContent = 'Sign In'; this.disabled = false;
+    }
+});
+
+// Enter key support
+document.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
+</script>
+</body>
+</html>

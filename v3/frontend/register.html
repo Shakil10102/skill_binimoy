@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Skill Binimoy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<div class="auth-container">
+    <div class="animated-bg">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
+    </div>
+    <div class="auth-wrapper register-wrapper">
+        <div class="auth-card glass-card">
+            <div class="auth-header">
+                <div class="logo" onclick="window.location.href='index.html'" style="cursor:pointer;justify-content:center;display:flex;align-items:center;gap:8px;margin-bottom:1rem">
+                    <svg viewBox="0 0 50 50" fill="none" width="36" height="36"><circle cx="25" cy="25" r="23" stroke="url(#gr1)" stroke-width="3"/><path d="M15 25 L25 15 L35 25 L25 35 Z" fill="url(#gr1)"/><defs><linearGradient id="gr1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6C63FF"/><stop offset="100%" style="stop-color:#00C2FF"/></linearGradient></defs></svg>
+                    <span style="font-size:1.25rem;font-weight:700">Skill Binimoy</span>
+                </div>
+                <h2>Create Account</h2>
+                <p>Start exchanging skills today</p>
+            </div>
+
+            <!-- Profile pic preview -->
+            <div style="text-align:center;margin-bottom:1.25rem">
+                <div id="avatarPreview" onclick="document.getElementById('profilePicInput').click()" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#00C2FF);display:flex;align-items:center;justify-content:center;color:white;font-size:2rem;cursor:pointer;margin:0 auto;overflow:hidden;border:3px dashed rgba(108,99,255,0.5)">📷</div>
+                <p style="font-size:0.8rem;color:var(--text-secondary);margin:0.5rem 0 0">Click to upload profile photo</p>
+                <input type="file" id="profilePicInput" accept="image/*" style="display:none">
+            </div>
+
+            <div id="errorMsg" style="display:none;background:#ef444422;color:#ef4444;padding:10px 14px;border-radius:8px;margin-bottom:1rem;font-size:0.9rem"></div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                <div class="form-group"><label>First Name</label><input type="text" id="firstName" placeholder="Firoz" class="form-control"></div>
+                <div class="form-group"><label>Last Name</label><input type="text" id="lastName" placeholder="Hasan" class="form-control"></div>
+            </div>
+            <div class="form-group"><label>Email Address</label><input type="email" id="email" placeholder="your@email.com" class="form-control"></div>
+            <div class="form-group">
+                <label>Password</label>
+                <div style="position:relative">
+                    <input type="password" id="password" placeholder="Min 6 characters" class="form-control">
+                    <button onclick="togglePass('password')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-secondary)">👁</button>
+                </div>
+                <div id="passStrength" style="height:4px;border-radius:2px;margin-top:6px;background:#333;overflow:hidden"><div id="passBar" style="height:100%;width:0;transition:all 0.3s;border-radius:2px"></div></div>
+                <p id="passText" style="font-size:0.75rem;color:var(--text-secondary);margin:4px 0 0"></p>
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" id="confirmPassword" placeholder="••••••••" class="form-control">
+            </div>
+            <div class="form-group"><label>Skills You Can Teach <span style="color:var(--text-secondary);font-size:0.8rem">(comma separated)</span></label><input type="text" id="skillsTeach" placeholder="e.g. JavaScript, Cooking, Guitar" class="form-control"></div>
+            <div class="form-group"><label>Skills You Want to Learn <span style="color:var(--text-secondary);font-size:0.8rem">(comma separated)</span></label><input type="text" id="skillsLearn" placeholder="e.g. Graphic Design, Photography" class="form-control"></div>
+            <div class="form-group"><label>Bio <span style="color:var(--text-secondary);font-size:0.8rem">(optional)</span></label><textarea id="bio" rows="2" placeholder="Tell others about yourself..." class="form-control"></textarea></div>
+
+            <button class="btn btn-primary" id="registerBtn" style="width:100%;margin-top:0.5rem">Create Account →</button>
+            <p style="text-align:center;margin-top:1.25rem;color:var(--text-secondary)">Already have an account? <a href="login.html" style="color:#6C63FF;font-weight:500">Login</a></p>
+        </div>
+    </div>
+</div>
+<script src="js/config.js"></script>
+<script>
+function togglePass(id) {
+    const el = document.getElementById(id);
+    el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+// If already logged in, go to dashboard
+if (localStorage.getItem('token')) window.location.href = 'dashboard.html';
+
+// Profile pic preview
+let profilePicBase64 = null;
+document.getElementById('profilePicInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    if (file.size > 500000) { alert('Image too large. Max 500KB.'); return; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        profilePicBase64 = e.target.result;
+        const preview = document.getElementById('avatarPreview');
+        preview.innerHTML = `<img src="${profilePicBase64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    };
+    reader.readAsDataURL(file);
+});
+
+// Password strength
+document.getElementById('password').addEventListener('input', function() {
+    const v = this.value;
+    const bar = document.getElementById('passBar');
+    const text = document.getElementById('passText');
+    if (v.length === 0) { bar.style.width='0'; text.textContent=''; return; }
+    const strength = [v.length >= 8, /[A-Z]/.test(v), /[0-9]/.test(v), /[^a-zA-Z0-9]/.test(v)].filter(Boolean).length;
+    const colors = ['#ef4444','#f59e0b','#10b981','#6C63FF'];
+    const labels = ['Weak','Fair','Good','Strong'];
+    bar.style.width = (strength * 25) + '%';
+    bar.style.background = colors[strength-1] || '#333';
+    text.textContent = labels[strength-1] || '';
+    text.style.color = colors[strength-1] || 'var(--text-secondary)';
+});
+
+document.getElementById('registerBtn').addEventListener('click', async function() {
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const skillsTeach = document.getElementById('skillsTeach').value.trim();
+    const skillsLearn = document.getElementById('skillsLearn').value.trim();
+    const bio = document.getElementById('bio').value.trim();
+    const errEl = document.getElementById('errorMsg');
+    errEl.style.display = 'none';
+
+    if (!firstName || !email || !password) { errEl.textContent = 'Name, email and password are required.'; errEl.style.display='block'; return; }
+    if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display='block'; return; }
+    if (password !== confirmPassword) { errEl.textContent = 'Passwords do not match.'; errEl.style.display='block'; return; }
+
+    const full_name = firstName + (lastName ? ' ' + lastName : '');
+    this.textContent = 'Creating account...'; this.disabled = true;
+
+    try {
+        // Register
+        const r = await fetch(window.API_URL + '/api/users/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ full_name, email, password })
+        });
+        const d = await r.json();
+        if (!r.ok) { errEl.textContent = d.message || 'Registration failed.'; errEl.style.display='block'; return; }
+
+        // Save token
+        localStorage.setItem('token', d.token);
+        localStorage.setItem('user', JSON.stringify(d.user));
+        const token = d.token;
+
+        // Update profile with bio and profile pic
+        if (bio || profilePicBase64) {
+            await fetch(window.API_URL + '/api/users/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ full_name, bio, profile_image: profilePicBase64 || null })
+            });
+        }
+
+        // Add skills
+        const teachList = skillsTeach ? skillsTeach.split(',').map(s=>s.trim()).filter(Boolean) : [];
+        const learnList = skillsLearn ? skillsLearn.split(',').map(s=>s.trim()).filter(Boolean) : [];
+        for (const skill of teachList) {
+            await fetch(window.API_URL + '/api/users/skills', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ skill_name: skill, skill_type: 'teach' })
+            });
+        }
+        for (const skill of learnList) {
+            await fetch(window.API_URL + '/api/users/skills', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ skill_name: skill, skill_type: 'learn' })
+            });
+        }
+
+        window.location.href = 'dashboard.html';
+    } catch(e) {
+        errEl.textContent = 'Cannot connect to server. Please try again.';
+        errEl.style.display = 'block';
+    } finally {
+        this.textContent = 'Create Account →'; this.disabled = false;
+    }
+});
+</script>
+</body>
+</html>

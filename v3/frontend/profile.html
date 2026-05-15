@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Skill Binimoy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .profile-cover { height:180px; border-radius:12px 12px 0 0; background:linear-gradient(135deg,#6C63FF,#00C2FF); position:relative; overflow:hidden; }
+        .profile-cover img { width:100%;height:100%;object-fit:cover; }
+        .cover-edit-btn { position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.5); color:white; border:none; border-radius:8px; padding:6px 14px; cursor:pointer; font-size:0.85rem; }
+        .profile-header-card { background:var(--card-bg,#1a1a2e); border-radius:12px; overflow:hidden; margin-bottom:1.5rem; border:1px solid var(--border,#2a2a3a); }
+        .profile-info-section { padding:1.5rem; display:flex; gap:1.5rem; align-items:flex-start; flex-wrap:wrap; }
+        .avatar-wrapper { position:relative; flex-shrink:0; margin-top:-50px; }
+        .profile-avatar-large { width:100px; height:100px; border-radius:50%; border:4px solid var(--card-bg,#1a1a2e); background:linear-gradient(135deg,#6C63FF,#00C2FF); display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; font-weight:700; overflow:hidden; }
+        .profile-avatar-large img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
+        .avatar-edit-btn { position:absolute; bottom:4px; right:4px; width:28px; height:28px; border-radius:50%; background:#6C63FF; border:none; cursor:pointer; color:white; font-size:0.8rem; display:flex; align-items:center; justify-content:center; }
+        .skill-tag-item { display:inline-flex; align-items:center; gap:6px; background:rgba(108,99,255,0.15); color:#6C63FF; padding:4px 12px; border-radius:20px; font-size:0.85rem; margin:3px; }
+        .skill-tag-remove { background:none; border:none; color:#6C63FF; cursor:pointer; font-size:1rem; padding:0; line-height:1; }
+    </style>
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header"><div class="logo" onclick="window.location.href='index.html'" style="cursor:pointer"><svg viewBox="0 0 50 50" fill="none" width="32" height="32"><circle cx="25" cy="25" r="23" stroke="url(#gsp)" stroke-width="3"/><path d="M15 25 L25 15 L35 25 L25 35 Z" fill="url(#gsp)"/><defs><linearGradient id="gsp" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6C63FF"/><stop offset="100%" style="stop-color:#00C2FF"/></linearGradient></defs></svg><span>Skill Binimoy</span></div></div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></a>
+            <a href="marketplace.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span>Marketplace</span></a>
+            <a href="requests.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Requests</span></a>
+            <a href="sessions.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Sessions</span></a>
+            <a href="chat.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span>Messages</span></a>
+            <a href="profile.html" class="nav-item active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></a>
+        </nav>
+        <div class="sidebar-footer"><a href="#" class="nav-item logout" id="logoutBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Logout</span></a></div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <div class="search-bar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search..."></div>
+            <div class="top-bar-actions">
+                <button class="theme-toggle" id="themeToggle"><svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+                <div class="user-menu"><div class="user-avatar user-initials" style="cursor:pointer" onclick="window.location.href='profile.html'">?</div></div>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <div class="profile-header-card">
+                <div class="profile-cover" id="coverDiv">
+                    <button class="cover-edit-btn" onclick="document.getElementById('coverInput').click()">Edit Cover</button>
+                    <input type="file" id="coverInput" accept="image/*" style="display:none">
+                </div>
+                <div class="profile-info-section">
+                    <div class="avatar-wrapper">
+                        <div class="profile-avatar-large" id="avatarDiv">U</div>
+                        <button class="avatar-edit-btn" onclick="document.getElementById('avatarInput').click()">✏</button>
+                        <input type="file" id="avatarInput" accept="image/*" style="display:none">
+                    </div>
+                    <div style="flex:1">
+                        <h1 id="profileName" style="margin:0.5rem 0 0.25rem">Loading...</h1>
+                        <p id="profileBio" style="color:var(--text-secondary);margin:0 0 1rem">...</p>
+                        <button class="btn btn-primary" id="editProfileBtn">Edit Profile</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+                <div class="dashboard-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                        <h3 style="margin:0">Skills I Teach</h3>
+                        <button class="btn btn-sm btn-primary" onclick="openAddSkill('teach')">+ Add</button>
+                    </div>
+                    <div id="teachSkills"><p style="color:var(--text-secondary);font-size:0.9rem">No skills added yet</p></div>
+                </div>
+                <div class="dashboard-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                        <h3 style="margin:0">Skills I Want to Learn</h3>
+                        <button class="btn btn-sm btn-primary" onclick="openAddSkill('learn')">+ Add</button>
+                    </div>
+                    <div id="learnSkills"><p style="color:var(--text-secondary);font-size:0.9rem">No skills added yet</p></div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <h3 style="margin:0 0 1rem">Reviews</h3>
+                <div id="reviewsList"><p style="color:var(--text-secondary)">No reviews yet.</p></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal" id="editProfileModal">
+    <div class="modal-content">
+        <button class="modal-close" id="editModalClose">&times;</button>
+        <div class="modal-body">
+            <h2>Edit Profile</h2>
+            <form id="editProfileForm">
+                <div class="form-group"><label>Full Name</label><input type="text" id="editName"></div>
+                <div class="form-group"><label>Bio</label><textarea id="editBio" rows="3" placeholder="Tell others about yourself..."></textarea></div>
+                <div class="form-group"><label>Email</label><input type="email" id="editEmail" readonly style="opacity:0.6"></div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-outline" id="cancelEdit">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Skill Modal -->
+<div class="modal" id="addSkillModal">
+    <div class="modal-content" style="max-width:400px">
+        <button class="modal-close" id="skillModalClose">&times;</button>
+        <div class="modal-body">
+            <h2 id="addSkillTitle">Add Skill</h2>
+            <div class="form-group"><label>Skill Name</label><input type="text" id="skillInput" placeholder="e.g. JavaScript, Cooking, Guitar..."></div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="confirmAddSkill">Add Skill</button>
+                <button class="btn btn-outline" id="cancelAddSkill">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/auth.js"></script>
+<script>
+(function() {
+    const API = window.API_URL;
+    const token = localStorage.getItem('token');
+    let currentSkillType = 'teach';
+
+    function getInitials(name) { return (name||'U').split(' ').map(p=>p[0]).join('').toUpperCase().slice(0,2); }
+
+    function toBase64(file) {
+        return new Promise((res, rej) => {
+            const reader = new FileReader();
+            reader.onload = () => res(reader.result);
+            reader.onerror = rej;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function loadProfile() {
+        try {
+            const r = await fetch(API + '/api/users/profile', { headers: { 'Authorization': 'Bearer ' + token } });
+            const d = await r.json();
+            if (!r.ok) return;
+            const u = d.user;
+
+            document.getElementById('profileName').textContent = u.full_name || '';
+            document.getElementById('profileBio').textContent = u.bio || 'No bio added yet. Click Edit Profile to add one.';
+            document.getElementById('editName').value = u.full_name || '';
+            document.getElementById('editBio').value = u.bio || '';
+            document.getElementById('editEmail').value = u.email || '';
+
+            // Avatar
+            const avatarDiv = document.getElementById('avatarDiv');
+            if (u.profile_image) {
+                avatarDiv.innerHTML = `<img src="${u.profile_image}" alt="Profile">`;
+            } else {
+                avatarDiv.textContent = getInitials(u.full_name);
+            }
+            // Update top-right avatar too
+            document.querySelectorAll('.user-avatar, .user-initials').forEach(el => {
+                if (!el.querySelector('img')) el.textContent = getInitials(u.full_name);
+            });
+
+            // Cover
+            if (u.cover_image) {
+                const coverDiv = document.getElementById('coverDiv');
+                coverDiv.style.backgroundImage = `url(${u.cover_image})`;
+                coverDiv.style.backgroundSize = 'cover';
+                coverDiv.style.backgroundPosition = 'center';
+            }
+
+            // Skills
+            renderSkills('teachSkills', u.skills_teach || [], 'teach');
+            renderSkills('learnSkills', u.skills_learn || [], 'learn');
+
+        } catch(e) { console.error(e); }
+    }
+
+    function renderSkills(containerId, skills, type) {
+        const el = document.getElementById(containerId);
+        if (!skills.length) { el.innerHTML = '<p style="color:var(--text-secondary);font-size:0.9rem">No skills added yet</p>'; return; }
+        el.innerHTML = skills.map(s => `
+            <span class="skill-tag-item">
+                ${s.skill_name}
+                <button class="skill-tag-remove" onclick="deleteSkill(${s.id})">×</button>
+            </span>`).join('');
+    }
+
+    window.deleteSkill = async function(skillId) {
+        try {
+            const r = await fetch(API + '/api/users/skills/' + skillId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+            const d = await r.json();
+            if (r.ok) { showNotification(d.message, 'success'); loadProfile(); }
+            else showNotification(d.message, 'error');
+        } catch(e) { showNotification('Error', 'error'); }
+    };
+
+    window.openAddSkill = function(type) {
+        currentSkillType = type;
+        document.getElementById('addSkillTitle').textContent = type === 'teach' ? 'Add Skill to Teach' : 'Add Skill to Learn';
+        document.getElementById('skillInput').value = '';
+        document.getElementById('addSkillModal').classList.add('active');
+    };
+
+    document.getElementById('skillModalClose').addEventListener('click', () => document.getElementById('addSkillModal').classList.remove('active'));
+    document.getElementById('cancelAddSkill').addEventListener('click', () => document.getElementById('addSkillModal').classList.remove('active'));
+
+    document.getElementById('confirmAddSkill').addEventListener('click', async function() {
+        const skill_name = document.getElementById('skillInput').value.trim();
+        if (!skill_name) { showNotification('Enter a skill name', 'error'); return; }
+        this.textContent = 'Adding...'; this.disabled = true;
+        try {
+            const r = await fetch(API + '/api/users/skills', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ skill_name, skill_type: currentSkillType })
+            });
+            const d = await r.json();
+            if (r.ok) { showNotification('Skill added!', 'success'); document.getElementById('addSkillModal').classList.remove('active'); loadProfile(); }
+            else showNotification(d.message, 'error');
+        } catch(e) { showNotification('Error', 'error'); }
+        finally { this.textContent = 'Add Skill'; this.disabled = false; }
+    });
+
+    // Edit profile
+    document.getElementById('editProfileBtn').addEventListener('click', () => document.getElementById('editProfileModal').classList.add('active'));
+    document.getElementById('editModalClose').addEventListener('click', () => document.getElementById('editProfileModal').classList.remove('active'));
+    document.getElementById('cancelEdit').addEventListener('click', () => document.getElementById('editProfileModal').classList.remove('active'));
+
+    document.getElementById('editProfileForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button[type="submit"]');
+        btn.textContent = 'Saving...'; btn.disabled = true;
+        try {
+            const r = await fetch(API + '/api/users/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ full_name: document.getElementById('editName').value.trim(), bio: document.getElementById('editBio').value.trim() })
+            });
+            const d = await r.json();
+            if (r.ok) {
+                const u = JSON.parse(localStorage.getItem('user') || '{}');
+                u.full_name = document.getElementById('editName').value.trim();
+                localStorage.setItem('user', JSON.stringify(u));
+                showNotification('Profile updated!', 'success');
+                document.getElementById('editProfileModal').classList.remove('active');
+                loadProfile();
+            } else showNotification(d.message, 'error');
+        } catch(e) { showNotification('Connection error', 'error'); }
+        finally { btn.textContent = 'Save Changes'; btn.disabled = false; }
+    });
+
+    // Avatar upload (base64)
+    document.getElementById('avatarInput').addEventListener('change', async function() {
+        const file = this.files[0];
+        if (!file) return;
+        if (file.size > 500000) { showNotification('Image too large. Max 500KB.', 'error'); return; }
+        showNotification('Uploading...', 'info');
+        const base64 = await toBase64(file);
+        try {
+            const r = await fetch(API + '/api/users/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ full_name: document.getElementById('editName').value || document.getElementById('profileName').textContent, profile_image: base64 })
+            });
+            const d = await r.json();
+            if (r.ok) { showNotification('Profile picture updated!', 'success'); loadProfile(); }
+            else showNotification(d.message, 'error');
+        } catch(e) { showNotification('Upload failed', 'error'); }
+    });
+
+    // Cover upload (base64)
+    document.getElementById('coverInput').addEventListener('change', async function() {
+        const file = this.files[0];
+        if (!file) return;
+        if (file.size > 1000000) { showNotification('Image too large. Max 1MB.', 'error'); return; }
+        showNotification('Uploading cover...', 'info');
+        const base64 = await toBase64(file);
+        try {
+            const r = await fetch(API + '/api/users/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ full_name: document.getElementById('profileName').textContent, cover_image: base64 })
+            });
+            const d = await r.json();
+            if (r.ok) { showNotification('Cover updated!', 'success'); loadProfile(); }
+            else showNotification(d.message, 'error');
+        } catch(e) { showNotification('Upload failed', 'error'); }
+    });
+
+    loadProfile();
+})();
+</script>
+</body>
+</html>
