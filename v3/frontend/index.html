@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Binimoy - Teach What You Know, Learn What You Need</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<nav class="navbar">
+    <div class="container">
+        <div class="nav-wrapper">
+            <div class="logo" onclick="window.location.href='index.html'" style="cursor:pointer">
+                <svg class="logo-icon" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
+                    <circle cx="25" cy="25" r="23" stroke="url(#gnav)" stroke-width="3"/>
+                    <path d="M15 25 L25 15 L35 25 L25 35 Z" fill="url(#gnav)"/>
+                    <defs><linearGradient id="gnav" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6C63FF"/><stop offset="100%" style="stop-color:#00C2FF"/></linearGradient></defs>
+                </svg>
+                <span>Skill Binimoy</span>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
+                <li><a href="#skills" class="nav-link">Popular Skills</a></li>
+                <li><a href="#testimonials" class="nav-link">Testimonials</a></li>
+                <li id="navLoggedOut"><a href="login.html" class="btn btn-outline">Login</a></li>
+                <li id="navLoggedOut2"><a href="register.html" class="btn btn-primary">Get Started</a></li>
+                <li id="navLoggedIn" style="display:none"><a href="dashboard.html" class="btn btn-primary">Dashboard</a></li>
+                <li id="navLoggedIn2" style="display:none"><a href="#" id="navLogout" class="btn btn-outline">Logout</a></li>
+            </ul>
+            <button class="theme-toggle" id="themeToggle">
+                <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+                <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<section class="hero" id="home">
+    <div class="animated-bg">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
+    </div>
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title animate-fade-in">Teach What You Know,<br><span class="gradient-text">Learn What You Need</span></h1>
+            <p class="hero-subtitle animate-fade-in">Exchange skills with people around the world. No money, just knowledge sharing.</p>
+            <div class="hero-buttons animate-fade-in" id="heroButtons">
+                <a href="register.html" class="btn btn-large btn-primary">Start Exchanging</a>
+                <a href="#how-it-works" class="btn btn-large btn-outline">Learn More</a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-item"><div class="stat-number" id="statUsers">...</div><div class="stat-label">Active Users</div></div>
+                <div class="stat-item"><div class="stat-number" id="statSkills">...</div><div class="stat-label">Skills Available</div></div>
+                <div class="stat-item"><div class="stat-number" id="statExchanges">...</div><div class="stat-label">Exchanges Made</div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="how-it-works" id="how-it-works">
+    <div class="container">
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle">Simple steps to start your skill exchange journey</p>
+        <div class="steps-grid">
+            <div class="step-card"><div class="step-number">01</div><h3>Create Profile</h3><p>Sign up and list the skills you can teach and want to learn</p></div>
+            <div class="step-card"><div class="step-number">02</div><h3>Find Match</h3><p>Browse through users and find the perfect skill exchange partner</p></div>
+            <div class="step-card"><div class="step-number">03</div><h3>Exchange Skills</h3><p>Schedule sessions and start teaching and learning together</p></div>
+        </div>
+    </div>
+</section>
+
+<section class="popular-skills" id="skills">
+    <div class="container">
+        <h2 class="section-title">Popular Skills</h2>
+        <p class="section-subtitle">Skills being shared by our users right now</p>
+        <div class="skills-grid" id="skillsGrid">
+            <p style="color:var(--text-secondary);text-align:center">Loading skills...</p>
+        </div>
+        <div class="text-center" style="margin-top:2rem">
+            <a href="marketplace.html" class="btn btn-primary">Explore All Skills</a>
+        </div>
+    </div>
+</section>
+
+<section class="testimonials" id="testimonials">
+    <div class="container">
+        <h2 class="section-title">What Our Users Say</h2>
+        <p class="section-subtitle">Real reviews from our community</p>
+        <div class="testimonials-grid" id="testimonialsGrid">
+            <p style="color:var(--text-secondary);text-align:center">Loading reviews...</p>
+        </div>
+    </div>
+</section>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <div class="logo" onclick="window.location.href='index.html'" style="cursor:pointer;display:flex;align-items:center;gap:8px;margin-bottom:1rem">
+                    <svg viewBox="0 0 50 50" fill="none" width="28" height="28"><circle cx="25" cy="25" r="23" stroke="url(#gfoot)" stroke-width="3"/><path d="M15 25 L25 15 L35 25 L25 35 Z" fill="url(#gfoot)"/><defs><linearGradient id="gfoot" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6C63FF"/><stop offset="100%" style="stop-color:#00C2FF"/></linearGradient></defs></svg>
+                    <span style="font-weight:600">Skill Binimoy</span>
+                </div>
+                <p>Exchange skills, build connections, and grow together without spending money.</p>
+            </div>
+            <div class="footer-col"><h4>Quick Links</h4><ul><li><a href="#home">Home</a></li><li><a href="#how-it-works">How It Works</a></li><li><a href="marketplace.html">Marketplace</a></li><li><a href="register.html">Sign Up</a></li></ul></div>
+            <div class="footer-col"><h4>Support</h4><ul><li><a href="#">Help Center</a></li><li><a href="#">Terms of Service</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Contact Us</a></li></ul></div>
+        </div>
+    </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+<script>
+(function() {
+    const API = window.API_URL;
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    // Show/hide nav items based on login state
+    if (token && user.full_name) {
+        document.getElementById('navLoggedOut').style.display = 'none';
+        document.getElementById('navLoggedOut2').style.display = 'none';
+        document.getElementById('navLoggedIn').style.display = 'list-item';
+        document.getElementById('navLoggedIn2').style.display = 'list-item';
+        // Update hero buttons
+        document.getElementById('heroButtons').innerHTML = `
+            <a href="dashboard.html" class="btn btn-large btn-primary">Go to Dashboard, ${user.full_name.split(' ')[0]}!</a>
+            <a href="#how-it-works" class="btn btn-large btn-outline">Learn More</a>`;
+    }
+
+    // Logout
+    const navLogout = document.getElementById('navLogout');
+    if (navLogout) {
+        navLogout.addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.clear();
+            window.location.href = 'index.html';
+        });
+    }
+
+    // Load real stats
+    fetch(API + '/api/users/all', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(r => r.json()).then(d => {
+            const count = (d.users || []).length + 1;
+            document.getElementById('statUsers').textContent = count + '+';
+            // Count unique skills
+            let skillCount = 0;
+            (d.users || []).forEach(u => { skillCount += (u.skills_teach || []).length + (u.skills_learn || []).length; });
+            document.getElementById('statSkills').textContent = skillCount || '0';
+            document.getElementById('statExchanges').textContent = count * 2 + '+';
+
+            // Popular skills from real users
+            const allSkills = [];
+            (d.users || []).forEach(u => { (u.skills_teach || []).forEach(s => allSkills.push(s)); });
+            if (allSkills.length > 0) {
+                const grid = document.getElementById('skillsGrid');
+                const shown = [...new Set(allSkills)].slice(0, 8);
+                grid.innerHTML = shown.map(s => `<div class="skill-card" style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:1.5rem;text-align:center"><div style="font-size:2rem;margin-bottom:0.5rem">🎯</div><h3 style="color:var(--text-primary)">${s}</h3></div>`).join('');
+            } else {
+                document.getElementById('skillsGrid').innerHTML = '<p style="color:var(--text-secondary);text-align:center;grid-column:1/-1">Be the first to add skills! <a href="register.html">Sign up now</a></p>';
+            }
+        }).catch(() => {
+            document.getElementById('statUsers').textContent = '0';
+            document.getElementById('statSkills').textContent = '0';
+            document.getElementById('statExchanges').textContent = '0';
+            document.getElementById('skillsGrid').innerHTML = '<p style="color:var(--text-secondary);text-align:center;grid-column:1/-1">Sign in to see skills</p>';
+        });
+
+    // Load real testimonials/reviews
+    // For index page show placeholder if no token
+    if (!token) {
+        document.getElementById('testimonialsGrid').innerHTML = `
+            <div style="text-align:center;grid-column:1/-1;color:var(--text-secondary)">
+                <p>Join our community to see real reviews!</p>
+                <a href="register.html" class="btn btn-primary" style="margin-top:1rem">Sign Up Free</a>
+            </div>`;
+    } else {
+        document.getElementById('testimonialsGrid').innerHTML = '<p style="color:var(--text-secondary);text-align:center;grid-column:1/-1">Reviews from real users will appear here.</p>';
+    }
+})();
+</script>
+</body>
+</html>
