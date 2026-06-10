@@ -1,28 +1,24 @@
-const nodemailer = require('nodemailer');
-
-/**
- * Sends an email using Gmail SMTP via nodemailer.
- * @param {string} to - Recipient email address
- * @param {string} subject - Email subject
- * @param {string} text - Email body text
- */
 const sendEmail = async (to, subject, text) => {
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
+    const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json'
         },
+        body: JSON.stringify({
+            from: 'Skill Binimoy <onboarding@resend.dev>',
+            to: [to],
+            subject: subject,
+            text: text
+        })
     });
-
-    const mailOptions = {
-        from: `"Skill Binimoy" <${process.env.EMAIL_USER}>`,
-        to: to,
-        subject: subject,
-        text: text,
-    };
-
-    await transporter.sendMail(mailOptions);
+ 
+    const data = await response.json();
+    if (!response.ok) {
+        console.error('Resend error:', data);
+        throw new Error(data.message || 'Failed to send email');
+    }
+    return data;
 };
-
+ 
 module.exports = sendEmail;
