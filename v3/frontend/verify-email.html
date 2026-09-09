@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - Skill Binimoy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .resend-btn {
+            background: none;
+            border: none;
+            color: #6C63FF;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0;
+            margin-top: 10px;
+        }
+        .resend-btn:disabled {
+            color: var(--text-secondary);
+            text-decoration: none;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+<div class="auth-container">
+    <div class="animated-bg">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
+    </div>
+    <div class="auth-wrapper">
+        <div class="auth-card glass-card">
+            <div class="auth-header">
+                <div class="logo" onclick="window.location.href='index.html'" style="cursor:pointer;justify-content:center;display:flex;align-items:center;gap:8px;margin-bottom:1rem">
+                    <svg viewBox="0 0 50 50" fill="none" width="36" height="36"><circle cx="25" cy="25" r="23" stroke="url(#gl1)" stroke-width="3"/><path d="M15 25 L25 15 L35 25 L25 35 Z" fill="url(#gl1)"/><defs><linearGradient id="gl1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6C63FF"/><stop offset="100%" style="stop-color:#00C2FF"/></linearGradient></defs></svg>
+                    <span style="font-size:1.25rem;font-weight:700">Skill Binimoy</span>
+                </div>
+                <h2>Verify Your Email</h2>
+                <p id="verifySubtext">Enter the 6-digit code sent to your Gmail</p>
+            </div>
+            <div id="errorMsg" style="display:none;background:#ef444422;color:#ef4444;padding:10px 14px;border-radius:8px;margin-bottom:1rem;font-size:0.9rem"></div>
+            <div id="successMsg" style="display:none;background:#10b98122;color:#10b981;padding:10px 14px;border-radius:8px;margin-bottom:1rem;font-size:0.9rem"></div>
+            
+            <div class="form-group">
+                <label>Verification Code</label>
+                <input type="text" id="verifyCode" placeholder="123456" maxlength="6" class="form-control" style="text-align:center;font-size:1.5rem;letter-spacing:5px">
+            </div>
+            
+            <button class="btn btn-primary btn-full" id="verifyBtn" style="width:100%;margin-top:0.5rem">Verify Account</button>
+            
+            <div style="text-align:center;margin-top:1.5rem">
+                <p style="color:var(--text-secondary);font-size:0.9rem">Didn't receive the code?</p>
+                <button id="resendBtn" class="resend-btn">Resend Code</button>
+                <p id="timerText" style="font-size:0.8rem;color:var(--text-secondary);margin-top:5px;display:none">Resend available in <span id="seconds">60</span>s</p>
+            </div>
+            
+            <p style="text-align:center;margin-top:1.25rem;color:var(--text-secondary)">Back to <a href="login.html" style="color:#6C63FF;font-weight:500">Login</a></p>
+        </div>
+    </div>
+</div>
+<script src="js/config.js"></script>
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+let email = urlParams.get('email') || localStorage.getItem('verify_email');
+
+if (!email) {
+    window.location.href = 'login.html';
+} else {
+    document.getElementById('verifySubtext').textContent = `Enter the 6-digit code sent to ${email}`;
+}
+
+document.getElementById('verifyBtn').addEventListener('click', async function() {
+    const code = document.getElementById('verifyCode').value.trim();
+    const errEl = document.getElementById('errorMsg');
+    const succEl = document.getElementById('successMsg');
+    errEl.style.display = 'none';
+    succEl.style.display = 'none';
+
+    if (code.length !== 6) {
+        errEl.textContent = 'Please enter a 6-digit code.';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    this.textContent = 'Verifying...'; this.disabled = true;
+    try {
+        const r = await fetch(window.API_URL + '/api/users/verify-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code })
+        });
+        const d = await r.json();
+        if (r.ok) {
+            succEl.textContent = d.message;
+            succEl.style.display = 'block';
+            setTimeout(() => {
+                window.location.href = 'login.html?verified=true';
+            }, 2000);
+        } else {
+            errEl.textContent = d.message || 'Verification failed.';
+            errEl.style.display = 'block';
+            this.textContent = 'Verify Account'; this.disabled = false;
+        }
+    } catch(e) {
+        errEl.textContent = 'Cannot connect to server. Please try again.';
+        errEl.style.display = 'block';
+        this.textContent = 'Verify Account'; this.disabled = false;
+    }
+});
+
+let cooldown = 0;
+document.getElementById('resendBtn').addEventListener('click', async function() {
+    if (cooldown > 0) return;
+    
+    const errEl = document.getElementById('errorMsg');
+    const succEl = document.getElementById('successMsg');
+    errEl.style.display = 'none';
+    succEl.style.display = 'none';
+
+    this.disabled = true;
+    try {
+        const r = await fetch(window.API_URL + '/api/users/resend-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const d = await r.json();
+        if (r.ok) {
+            succEl.textContent = d.message;
+            succEl.style.display = 'block';
+            startCooldown();
+        } else {
+            errEl.textContent = d.message || 'Failed to resend code.';
+            errEl.style.display = 'block';
+            this.disabled = false;
+        }
+    } catch(e) {
+        errEl.textContent = 'Cannot connect to server.';
+        errEl.style.display = 'block';
+        this.disabled = false;
+    }
+});
+
+function startCooldown() {
+    cooldown = 60;
+    const btn = document.getElementById('resendBtn');
+    const timerText = document.getElementById('timerText');
+    const secSpan = document.getElementById('seconds');
+    
+    btn.disabled = true;
+    timerText.style.display = 'block';
+    
+    const interval = setInterval(() => {
+        cooldown--;
+        secSpan.textContent = cooldown;
+        if (cooldown <= 0) {
+            clearInterval(interval);
+            btn.disabled = false;
+            timerText.style.display = 'none';
+        }
+    }, 1000);
+}
+</script>
+</body>
+</html>

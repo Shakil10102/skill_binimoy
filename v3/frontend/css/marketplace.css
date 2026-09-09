@@ -1,0 +1,224 @@
+/* ========================================
+   Marketplace Styles
+   ======================================== */
+
+.filters-bar {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.filter-group label {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.filter-select {
+    padding: 0.5rem 1rem;
+    background: var(--background-dark);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Marketplace Grid */
+.marketplace-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.marketplace-card {
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: var(--transition-normal);
+    cursor: pointer;
+}
+
+.marketplace-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+.card-image {
+    height: 180px;
+    background: var(--gradient-primary);
+    position: relative;
+    overflow: hidden;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.85rem;
+    color: white;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.card-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.card-user-avatar {
+    width: 40px;
+    height: 40px;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: white;
+}
+
+.card-user-info h4 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.card-user-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.card-skills {
+    margin-bottom: 1rem;
+}
+
+.card-skills h5 {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.card-skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.card-skill-tags .skill-tag {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.75rem;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.card-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #FFD700;
+}
+
+.card-action {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 0.5rem 1.25rem;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.card-action:hover {
+    transform: scale(1.05);
+}
+
+/* Modal for Skill Detail */
+.modal-body h2 {
+    margin-bottom: 1.5rem;
+}
+
+.modal-user-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-avatar {
+    width: 80px;
+    height: 80px;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+}
+
+.modal-user-details h3 {
+    margin-bottom: 0.25rem;
+}
+
+.modal-user-details p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.modal-section {
+    margin-bottom: 2rem;
+}
+
+.modal-section h4 {
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}

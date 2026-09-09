@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - Skill Binimoy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .chat-layout { display:grid; grid-template-columns:300px 1fr; height:calc(100vh - 70px); overflow:hidden; }
+        .chat-sidebar { border-right:1px solid var(--border,#2a2a3a); display:flex; flex-direction:column; overflow:hidden; }
+        .chat-sidebar-tabs { display:flex; border-bottom:1px solid var(--border,#2a2a3a); }
+        .chat-tab { flex:1; padding:0.75rem; text-align:center; cursor:pointer; font-size:0.85rem; font-weight:500; color:var(--text-secondary); border:none; background:none; transition:all 0.2s; }
+        .chat-tab.active { color:#6C63FF; border-bottom:2px solid #6C63FF; }
+        .chat-list { flex:1; overflow-y:auto; }
+        .chat-item { display:flex; align-items:center; gap:0.75rem; padding:0.875rem 1rem; cursor:pointer; border-bottom:1px solid var(--border,#2a2a3a); transition:background 0.2s; }
+        .chat-item:hover, .chat-item.active { background:rgba(108,99,255,0.1); }
+        .chat-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#6C63FF,#00C2FF); display:flex; align-items:center; justify-content:center; color:white; font-weight:600; font-size:0.9rem; flex-shrink:0; overflow:hidden; }
+        .chat-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+        .group-avatar { background:linear-gradient(135deg,#f59e0b,#ef4444); }
+        .chat-item-info { flex:1; min-width:0; }
+        .chat-item-name { font-weight:500; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .chat-item-preview { font-size:0.75rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+        .chat-area { display:flex; flex-direction:column; height:100%; }
+        .chat-header { padding:1rem 1.5rem; border-bottom:1px solid var(--border,#2a2a3a); display:flex; align-items:center; gap:0.75rem; }
+        .messages-area { flex:1; overflow-y:auto; padding:1.5rem; display:flex; flex-direction:column; gap:0.5rem; }
+        .msg-row { display:flex; align-items:flex-end; gap:0.5rem; }
+        .msg-row.sent { flex-direction:row-reverse; }
+        .msg-bubble { max-width:65%; padding:0.625rem 0.875rem; border-radius:18px; font-size:0.875rem; line-height:1.5; word-break:break-word; }
+        .msg-bubble.sent { background:linear-gradient(135deg,#6C63FF,#00C2FF); color:white; border-bottom-right-radius:4px; }
+        .msg-bubble.received { background:var(--card-bg,#1a1a2e); color:var(--text-primary); border:1px solid var(--border,#2a2a3a); border-bottom-left-radius:4px; }
+        .msg-sender-name { font-size:0.7rem; color:var(--text-secondary); margin-bottom:2px; }
+        .msg-time { font-size:0.65rem; color:var(--text-secondary); margin-top:2px; white-space:nowrap; }
+        .chat-input-row { padding:1rem 1.5rem; border-top:1px solid var(--border,#2a2a3a); display:flex; gap:0.75rem; align-items:flex-end; }
+        .chat-input { flex:1; padding:0.75rem 1rem; border-radius:20px; border:1px solid var(--border,#2a2a3a); background:var(--card-bg,#1a1a2e); color:var(--text-primary); outline:none; font-size:0.9rem; resize:none; max-height:150px; min-height:44px; line-height:1.4; font-family:inherit; }
+        .chat-placeholder { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-secondary); gap:0.5rem; }
+        .new-group-btn { width:100%; padding:0.75rem; border:1px dashed rgba(108,99,255,0.4); background:rgba(108,99,255,0.05); color:#6C63FF; border-radius:8px; cursor:pointer; font-size:0.85rem; font-weight:500; transition:all 0.2s; }
+        .new-group-btn:hover { background:rgba(108,99,255,0.1); }
+        .no-friends { padding:1.5rem; text-align:center; color:var(--text-secondary); font-size:0.85rem; }
+    </style>
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header"><div class="logo" onclick="window.location.href='index.html'" style="cursor:pointer"><svg viewBox="0 0 50 50" fill="none" width="32" height="32"><circle cx="25" cy="25" r="23" stroke="url(#gs4)" stroke-width="3"/><path d="M15 25 L25 15 L35 25 L25 35 Z" fill="url(#gs4)"/><defs><linearGradient id="gs4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6C63FF"/><stop offset="100%" style="stop-color:#00C2FF"/></linearGradient></defs></svg><span>Skill Binimoy</span></div></div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></a>
+            <a href="marketplace.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span>Marketplace</span></a>
+            <a href="requests.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Requests</span></a>
+            <a href="sessions.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Sessions</span></a>
+            <a href="chat.html" class="nav-item active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span>Messages</span></a>
+            <a href="profile.html" class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></a>
+        </nav>
+        <div class="sidebar-footer"><a href="#" class="nav-item logout" id="logoutBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Logout</span></a></div>
+    </aside>
+
+    <main class="main-content" style="padding:0;overflow:hidden">
+        <div class="chat-layout">
+            <!-- Left: Friends + Groups list -->
+            <div class="chat-sidebar">
+                <div class="chat-sidebar-tabs">
+                    <button class="chat-tab active" id="tabDirect" onclick="switchTab('direct')">💬 Direct</button>
+                    <button class="chat-tab" id="tabGroups" onclick="switchTab('groups')">👥 Groups</button>
+                </div>
+
+                <!-- Direct Messages list -->
+                <div class="chat-list" id="directList">
+                    <p style="padding:1rem;color:var(--text-secondary);font-size:0.85rem">Loading friends...</p>
+                </div>
+
+                <!-- Groups list -->
+                <div class="chat-list" id="groupList" style="display:none">
+                    <div style="padding:0.75rem">
+                        <button class="new-group-btn" onclick="openCreateGroup()">+ Create New Group</button>
+                    </div>
+                    <div id="groupItems"><p style="padding:1rem;color:var(--text-secondary);font-size:0.85rem">Loading groups...</p></div>
+                </div>
+            </div>
+
+            <!-- Right: Chat area -->
+            <div class="chat-area" id="chatArea">
+                <div class="chat-placeholder">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.3"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    <p>Select a friend to start chatting</p>
+                    <p style="font-size:0.8rem">Only accepted skill exchange partners appear here</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Create Group Modal -->
+<div class="modal" id="createGroupModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('createGroupModal').classList.remove('active')">&times;</button>
+        <div class="modal-body">
+            <h2>Create Group Chat</h2>
+            <div class="form-group"><label>Group Name</label><input type="text" id="groupName" placeholder="e.g. JavaScript Study Group"></div>
+            <div class="form-group">
+                <label>Add Members (from your friends)</label>
+                <div id="friendCheckboxes" style="max-height:200px;overflow-y:auto;border:1px solid var(--border,#2a2a3a);border-radius:8px;padding:0.5rem"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="confirmCreateGroup">Create Group</button>
+                <button class="btn btn-outline" onclick="document.getElementById('createGroupModal').classList.remove('active')">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/auth.js"></script>
+<script>
+(function() {
+    const API = window.API_URL;
+    const token = localStorage.getItem('token');
+    const myId = parseInt(JSON.parse(localStorage.getItem('user') || '{}').id);
+    let friends = [];
+    let currentMode = null; // 'direct' or 'group'
+    let currentId = null;
+    let pollInterval = null;
+
+    function getInitials(name) { return (name||'U').split(' ').map(p=>p[0]).join('').toUpperCase().slice(0,2); }
+    function timeAgo(dt) {
+        const d = new Date(dt);
+        return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    }
+
+    window.autoResize = function(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight) + 'px';
+    };
+
+    window.handleChatKeydown = function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMsg();
+        }
+    };
+
+    // ==========================================
+    // TAB SWITCHING
+    // ==========================================
+    window.switchTab = function(tab) {
+        document.getElementById('tabDirect').classList.toggle('active', tab === 'direct');
+        document.getElementById('tabGroups').classList.toggle('active', tab === 'groups');
+        document.getElementById('directList').style.display = tab === 'direct' ? 'block' : 'none';
+        document.getElementById('groupList').style.display = tab === 'groups' ? 'block' : 'none';
+    };
+
+    // ==========================================
+    // LOAD FRIENDS (accepted requests only)
+    // ==========================================
+    function loadFriends() {
+        fetch(API + '/api/users/friends', { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(r => r.json()).then(d => {
+                friends = d.friends || [];
+                const list = document.getElementById('directList');
+                if (!friends.length) {
+                    list.innerHTML = '<div class="no-friends"><p>No friends yet.</p><p>Accept exchange requests to start chatting!</p><a href="requests.html" style="color:#6C63FF">Go to Requests →</a></div>';
+                    return;
+                }
+                list.innerHTML = friends.map(f => `
+                    <div class="chat-item" id="fi_${f.id}" onclick="openDirectChat(${f.id}, '${f.full_name}', '${f.profile_image||''}')">
+                        <div class="chat-avatar">${f.profile_image ? `<img src="${f.profile_image}">` : getInitials(f.full_name)}</div>
+                        <div class="chat-item-info">
+                            <div class="chat-item-name">${f.full_name}</div>
+                            <div class="chat-item-preview">Tap to chat</div>
+                        </div>
+                    </div>`).join('');
+            }).catch(() => {
+                document.getElementById('directList').innerHTML = '<p class="no-friends">Failed to load friends.</p>';
+            });
+    }
+
+    // ==========================================
+    // OPEN DIRECT CHAT
+    // ==========================================
+    window.openDirectChat = function(userId, name, img) {
+        currentMode = 'direct';
+        currentId = userId;
+        document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+        const el = document.getElementById('fi_' + userId);
+        if (el) el.classList.add('active');
+
+        document.getElementById('chatArea').innerHTML = `
+            <div class="chat-header">
+                <div class="chat-avatar">${img ? `<img src="${img}">` : getInitials(name)}</div>
+                <div><h3 style="margin:0;font-size:1rem">${name}</h3><p style="margin:0;font-size:0.75rem;color:var(--text-secondary)">Skill Exchange Partner</p></div>
+            </div>
+            <div class="messages-area" id="messagesArea"></div>
+            <div class="chat-input-row">
+                <textarea class="chat-input" id="msgInput" placeholder="Type a message..." rows="1" oninput="autoResize(this)" onkeydown="handleChatKeydown(event)"></textarea>
+                <button class="btn btn-primary" style="border-radius:25px;padding:0.625rem 1.25rem;margin-bottom:2px" onclick="sendMsg()">Send</button>
+            </div>`;
+        loadDirectMessages();
+        if (pollInterval) clearInterval(pollInterval);
+        pollInterval = setInterval(loadDirectMessages, 3000);
+    };
+
+    function loadDirectMessages() {
+        if (currentMode !== 'direct' || !currentId) return;
+        fetch(API + '/api/users/messages/' + currentId, { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(r => r.json()).then(d => {
+                const area = document.getElementById('messagesArea');
+                if (!area) return;
+                const msgs = d.messages || [];
+                if (!msgs.length) { area.innerHTML = '<p style="text-align:center;color:var(--text-secondary);margin-top:3rem">No messages yet. Say hi! 👋</p>'; return; }
+                const prev = area.scrollTop + area.clientHeight >= area.scrollHeight - 10;
+                area.innerHTML = msgs.map(m => `
+                    <div class="msg-row ${m.sender_id == myId ? 'sent' : ''}">
+                        <div>
+                            <div class="msg-bubble ${m.sender_id == myId ? 'sent' : 'received'}">${m.message}</div>
+                            <div class="msg-time" style="text-align:${m.sender_id == myId ? 'right' : 'left'}">${timeAgo(m.created_at)}</div>
+                        </div>
+                    </div>`).join('');
+                if (prev) area.scrollTop = area.scrollHeight;
+            });
+    }
+
+    window.sendMsg = async function() {
+        const input = document.getElementById('msgInput');
+        if (!input) return;
+        const msg = input.value.trim();
+        if (!msg) return;
+        input.value = '';
+        input.style.height = 'auto'; // Reset height after sending
+        if (currentMode === 'direct') {
+            await fetch(API + '/api/users/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ receiver_id: currentId, message: msg })
+            });
+            loadDirectMessages();
+        } else if (currentMode === 'group') {
+            await fetch(API + '/api/users/groups/' + currentId + '/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ message: msg })
+            });
+            loadGroupMessages();
+        }
+    };
+
+    // ==========================================
+    // GROUPS
+    // ==========================================
+    function loadGroups() {
+        fetch(API + '/api/users/groups', { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(r => r.json()).then(d => {
+                const groups = d.groups || [];
+                const el = document.getElementById('groupItems');
+                if (!groups.length) { el.innerHTML = '<p class="no-friends">No groups yet. Create one!</p>'; return; }
+                el.innerHTML = groups.map(g => `
+                    <div class="chat-item" id="gi_${g.id}" onclick="openGroupChat(${g.id}, '${g.name}')">
+                        <div class="chat-avatar group-avatar">${g.name[0].toUpperCase()}</div>
+                        <div class="chat-item-info">
+                            <div class="chat-item-name">${g.name}</div>
+                            <div class="chat-item-preview">${g.member_count} members${g.last_message ? ' · ' + g.last_message.slice(0,20) : ''}</div>
+                        </div>
+                    </div>`).join('');
+            });
+    }
+
+    window.openGroupChat = function(groupId, name) {
+        currentMode = 'group';
+        currentId = groupId;
+        document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+        const el = document.getElementById('gi_' + groupId);
+        if (el) el.classList.add('active');
+
+        document.getElementById('chatArea').innerHTML = `
+            <div class="chat-header">
+                <div class="chat-avatar group-avatar">${name[0].toUpperCase()}</div>
+                <div><h3 style="margin:0;font-size:1rem">${name}</h3><p style="margin:0;font-size:0.75rem;color:var(--text-secondary)">Group Chat</p></div>
+            </div>
+            <div class="messages-area" id="messagesArea"></div>
+            <div class="chat-input-row">
+                <textarea class="chat-input" id="msgInput" placeholder="Type a message..." rows="1" oninput="autoResize(this)" onkeydown="handleChatKeydown(event)"></textarea>
+                <button class="btn btn-primary" style="border-radius:25px;padding:0.625rem 1.25rem;margin-bottom:2px" onclick="sendMsg()">Send</button>
+            </div>`;
+        loadGroupMessages();
+        if (pollInterval) clearInterval(pollInterval);
+        pollInterval = setInterval(loadGroupMessages, 3000);
+    };
+
+    function loadGroupMessages() {
+        if (currentMode !== 'group' || !currentId) return;
+        fetch(API + '/api/users/groups/' + currentId + '/messages', { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(r => r.json()).then(d => {
+                const area = document.getElementById('messagesArea');
+                if (!area) return;
+                const msgs = d.messages || [];
+                if (!msgs.length) { area.innerHTML = '<p style="text-align:center;color:var(--text-secondary);margin-top:3rem">No messages yet. Start the conversation! 💬</p>'; return; }
+                const prev = area.scrollTop + area.clientHeight >= area.scrollHeight - 10;
+                area.innerHTML = msgs.map(m => `
+                    <div class="msg-row ${m.sender_id == myId ? 'sent' : ''}">
+                        <div>
+                            ${m.sender_id != myId ? `<div class="msg-sender-name">${m.sender_name}</div>` : ''}
+                            <div class="msg-bubble ${m.sender_id == myId ? 'sent' : 'received'}">${m.message}</div>
+                            <div class="msg-time" style="text-align:${m.sender_id == myId ? 'right' : 'left'}">${timeAgo(m.created_at)}</div>
+                        </div>
+                    </div>`).join('');
+                if (prev) area.scrollTop = area.scrollHeight;
+            });
+    }
+
+    // ==========================================
+    // CREATE GROUP MODAL
+    // ==========================================
+    window.openCreateGroup = function() {
+        const checkboxes = document.getElementById('friendCheckboxes');
+        if (!friends.length) {
+            checkboxes.innerHTML = '<p style="color:var(--text-secondary);font-size:0.85rem;padding:0.5rem">No friends yet. Accept exchange requests first!</p>';
+        } else {
+            checkboxes.innerHTML = friends.map(f => `
+                <label style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem;cursor:pointer;border-radius:6px;transition:background 0.2s" onmouseover="this.style.background='rgba(108,99,255,0.1)'" onmouseout="this.style.background=''">
+                    <input type="checkbox" value="${f.id}" style="width:16px;height:16px;accent-color:#6C63FF">
+                    <div class="chat-avatar" style="width:32px;height:32px;font-size:0.75rem">${f.profile_image ? `<img src="${f.profile_image}">` : getInitials(f.full_name)}</div>
+                    <span>${f.full_name}</span>
+                </label>`).join('');
+        }
+        document.getElementById('groupName').value = '';
+        document.getElementById('createGroupModal').classList.add('active');
+    };
+
+    document.getElementById('confirmCreateGroup').addEventListener('click', async function() {
+        const name = document.getElementById('groupName').value.trim();
+        if (!name) { showNotification('Enter a group name', 'error'); return; }
+        const checked = [...document.querySelectorAll('#friendCheckboxes input:checked')].map(el => parseInt(el.value));
+        if (!checked.length) { showNotification('Select at least one member', 'error'); return; }
+
+        this.textContent = 'Creating...'; this.disabled = true;
+        try {
+            const r = await fetch(API + '/api/users/groups', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ group_name: name, member_ids: checked })
+            });
+            const d = await r.json();
+            if (r.ok) {
+                showNotification('Group created!', 'success');
+                document.getElementById('createGroupModal').classList.remove('active');
+                switchTab('groups');
+                loadGroups();
+                openGroupChat(d.group_id, name);
+            } else showNotification(d.message, 'error');
+        } catch(e) { showNotification('Error creating group', 'error'); }
+        finally { this.textContent = 'Create Group'; this.disabled = false; }
+    });
+
+    // Init
+    loadFriends();
+    loadGroups();
+})();
+</script>
+</body>
+</html>
