@@ -10,7 +10,7 @@ exports.registerUser = async (req, res) => {
     const { full_name, email, password } = req.body;
     if (!full_name || !email || !password)
         return res.status(400).json({ message: 'All fields are required' });
-    
+
     // Gmail validation
     const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
     if (!gmailRegex.test(email)) {
@@ -23,35 +23,35 @@ exports.registerUser = async (req, res) => {
         db.query('SELECT id FROM users WHERE email = ?', [email], async (err, result) => {
             if (err) return res.status(500).json({ message: 'Server error' });
             if (result.length > 0) return res.status(409).json({ message: 'Email already registered. Please login.' });
-            
+
             const hashedPassword = await bcrypt.hash(password, 10);
-            
+
             // Generate verification code
             const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
             const verificationExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
-            db.query('INSERT INTO users (full_name, email, password, verification_code, verification_expires) VALUES (?, ?, ?, ?, ?)', 
+            db.query('INSERT INTO users (full_name, email, password, verification_code, verification_expires) VALUES (?, ?, ?, ?, ?)',
                 [full_name, email, hashedPassword, verificationCode, verificationExpires], async (err2, result2) => {
-                if (err2) return res.status(500).json({ message: 'Registration failed. Please try again.' });
-                
-                try {
-                    await sendEmail(
-                        email,
-                        'Verify your Skill Binimoy account',
-                        `Your verification code is: ${verificationCode}. It expires in 10 minutes.`
-                    );
-                    res.status(201).json({ 
-                        message: 'Account created! Please check your Gmail for the verification code.', 
-                        email 
-                    });
-                } catch (emailErr) {
-                    console.error('Email error:', emailErr);
-                    res.status(201).json({ 
-                        message: 'Account created, but failed to send verification email. Please try resending the code.', 
-                        email 
-                    });
-                }
-            });
+                    if (err2) return res.status(500).json({ message: 'Registration failed. Please try again.' });
+
+                    try {
+                        await sendEmail(
+                            email,
+                            'Verify your Skill Binimoy account',
+                            `Your verification code is: ${verificationCode}. It expires in 10 minutes.`
+                        );
+                        res.status(201).json({
+                            message: 'Account created! Please check your Gmail for the verification code.',
+                            email
+                        });
+                    } catch (emailErr) {
+                        console.error('Email error:', emailErr);
+                        res.status(201).json({
+                            message: 'Account created, but failed to send verification email. Please try resending the code.',
+                            email
+                        });
+                    }
+                });
         });
     } catch (e) { res.status(500).json({ message: 'Server error.' }); }
 };
@@ -89,7 +89,7 @@ exports.forgotPassword = (req, res) => {
 
     db.query('SELECT id FROM users WHERE email = ?', [email], async (err, result) => {
         if (err) return res.status(500).json({ message: 'Server error' });
-        
+
         // Security: always return success
         const successMsg = { message: 'If that email is registered, a reset code has been sent.' };
         if (result.length === 0) return res.status(200).json(successMsg);
@@ -97,21 +97,21 @@ exports.forgotPassword = (req, res) => {
         const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
         const resetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
-        db.query('UPDATE users SET reset_code = ?, reset_code_expires = ? WHERE email = ?', 
+        db.query('UPDATE users SET reset_code = ?, reset_code_expires = ? WHERE email = ?',
             [resetCode, resetExpires, email], async (err2) => {
-            if (err2) return res.status(500).json({ message: 'Server error' });
+                if (err2) return res.status(500).json({ message: 'Server error' });
 
-            try {
-                await sendEmail(
-                    email,
-                    'Password Reset Code - Skill Binimoy',
-                    `Your password reset code is: ${resetCode}. It expires in 10 minutes.`
-                );
-                res.status(200).json(successMsg);
-            } catch (emailErr) {
-                res.status(500).json({ message: 'Failed to send email. Try again later.' });
-            }
-        });
+                try {
+                    await sendEmail(
+                        email,
+                        'Password Reset Code - Skill Binimoy',
+                        `Your password reset code is: ${resetCode}. It expires in 10 minutes.`
+                    );
+                    res.status(200).json(successMsg);
+                } catch (emailErr) {
+                    res.status(500).json({ message: 'Failed to send email. Try again later.' });
+                }
+            });
     });
 };
 
@@ -131,11 +131,11 @@ exports.resetPassword = async (req, res) => {
         if (new Date() > new Date(user.reset_code_expires)) return res.status(400).json({ message: 'Reset code expired' });
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        db.query('UPDATE users SET password = ?, reset_code = NULL, reset_code_expires = NULL WHERE id = ?', 
+        db.query('UPDATE users SET password = ?, reset_code = NULL, reset_code_expires = NULL WHERE id = ?',
             [hashedPassword, user.id], (err2) => {
-            if (err2) return res.status(500).json({ message: 'Failed to reset password' });
-            res.status(200).json({ message: 'Password reset successfully! You can now login.' });
-        });
+                if (err2) return res.status(500).json({ message: 'Failed to reset password' });
+                res.status(200).json({ message: 'Password reset successfully! You can now login.' });
+            });
     });
 };
 
@@ -149,22 +149,22 @@ exports.resendCode = (req, res) => {
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     const verificationExpires = new Date(Date.now() + 10 * 60 * 1000);
 
-    db.query('UPDATE users SET verification_code = ?, verification_expires = ? WHERE email = ? AND is_verified = FALSE', 
+    db.query('UPDATE users SET verification_code = ?, verification_expires = ? WHERE email = ? AND is_verified = FALSE',
         [verificationCode, verificationExpires, email], async (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found or already verified' });
+            if (err) return res.status(500).json({ message: 'Server error' });
+            if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found or already verified' });
 
-        try {
-            await sendEmail(
-                email,
-                'Your New Verification Code',
-                `Your new verification code is: ${verificationCode}. It expires in 10 minutes.`
-            );
-            res.status(200).json({ message: 'New code sent to your Gmail!' });
-        } catch (emailErr) {
-            res.status(500).json({ message: 'Failed to send email. Try again.' });
-        }
-    });
+            try {
+                await sendEmail(
+                    email,
+                    'Your New Verification Code',
+                    `Your new verification code is: ${verificationCode}. It expires in 10 minutes.`
+                );
+                res.status(200).json({ message: 'New code sent to your Gmail!' });
+            } catch (emailErr) {
+                res.status(500).json({ message: 'Failed to send email. Try again.' });
+            }
+        });
 };
 
 // ==========================================
@@ -177,9 +177,9 @@ exports.loginUser = async (req, res) => {
         db.query('SELECT * FROM users WHERE email = ?', [email], async (err, result) => {
             if (err) return res.status(500).json({ message: 'Server error' });
             if (result.length === 0) return res.status(401).json({ message: 'Invalid email or password' });
-            
+
             const user = result[0];
-            
+
             // Check verification status
             if (!user.is_verified) {
                 return res.status(403).json({ message: 'Please verify your email before logging in.', email: user.email });
@@ -187,7 +187,7 @@ exports.loginUser = async (req, res) => {
 
             const isMatch = await bcrypt.compare(password, user.password);
             if (!isMatch) return res.status(401).json({ message: 'Invalid email or password' });
-            
+
             const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
             res.status(200).json({ message: 'Login successful!', token, user: { id: user.id, full_name: user.full_name, email: user.email, profile_image: user.profile_image } });
         });
@@ -379,7 +379,7 @@ exports.getMessages = (req, res) => {
               ORDER BY m.created_at ASC`, [userId, otherUserId, otherUserId, userId], (err, result) => {
         if (err) return res.status(500).json({ message: 'Server error' });
         // Mark as read
-        db.query('UPDATE messages SET is_read = TRUE WHERE receiver_id = ? AND sender_id = ?', [userId, otherUserId], () => {});
+        db.query('UPDATE messages SET is_read = TRUE WHERE receiver_id = ? AND sender_id = ?', [userId, otherUserId], () => { });
         res.status(200).json({ messages: result });
     });
 };
@@ -589,34 +589,47 @@ Your responsibilities:
             parts: [{ text: message.trim() }]
         });
 
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const candidateModels = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-flash-lite-latest'];
+        let replyText = null;
 
-        const response = await fetch(geminiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                system_instruction: {
-                    parts: [{ text: systemInstruction }]
-                },
-                contents,
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 800
+        for (const model of candidateModels) {
+            try {
+                const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                const response = await fetch(geminiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-goog-api-key': apiKey
+                    },
+                    body: JSON.stringify({
+                        system_instruction: {
+                            parts: [{ text: systemInstruction }]
+                        },
+                        contents,
+                        generationConfig: {
+                            temperature: 0.7,
+                            maxOutputTokens: 800
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok && data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    replyText = data.candidates[0].content.parts[0].text;
+                    break;
+                } else {
+                    console.warn(`Model ${model} failed:`, data?.error?.message || data);
                 }
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            console.error('Gemini API Error:', data);
-            return res.status(200).json({
-                reply: "I'm having a little trouble connecting right now. Please verify your Gemini API key or try again in a moment! 😊"
-            });
+            } catch (modelErr) {
+                console.warn(`Model ${model} request error:`, modelErr.message);
+            }
         }
 
-        const replyText = data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-            "I'm here to help! Could you please rephrase your question?";
+        if (!replyText) {
+            return res.status(200).json({
+                reply: "I'm having a little trouble connecting to the AI service right now. Please try again in a few moments! 😊"
+            });
+        }
 
         return res.status(200).json({ reply: replyText });
     } catch (err) {
