@@ -640,3 +640,116 @@ Your responsibilities:
     }
 };
 
+// ==========================================
+// GET TRENDING SKILLS
+// ==========================================
+exports.getTrendingSkills = (req, res) => {
+    const sql = `
+        SELECT skill_name, COUNT(*) as total_count,
+               SUM(CASE WHEN skill_type = 'teach' THEN 1 ELSE 0 END) as teach_count,
+               SUM(CASE WHEN skill_type = 'learn' THEN 1 ELSE 0 END) as learn_count
+        FROM skills
+        GROUP BY skill_name
+        ORDER BY total_count DESC, skill_name ASC
+        LIMIT 10
+    `;
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('Trending skills error:', err);
+            return res.status(500).json({ message: 'Failed to get trending skills' });
+        }
+        res.status(200).json({ trending: results });
+    });
+};
+
+// ==========================================
+// GENERATE VIDEO ROOM (Jitsi Meet)
+// ==========================================
+exports.generateVideoRoom = (req, res) => {
+    const userId = req.user.id;
+    const { type, targetId } = req.body;
+
+    if (!type || !targetId) {
+        return res.status(400).json({ message: 'Call type and targetId are required' });
+    }
+
+    if (type === 'session') {
+        // Verify session membership
+        const sql = `
+            SELECT s.id, s.scheduled_at, er.sender_id, er.receiver_id,
+                   u1.full_name as sender_name, u2.full_name as receiver_name,
+                   er.offered_skill, er.requested_skill
+            FROM sessions s
+            JOIN exchange_requests er ON s.request_id = er.id
+            JOIN users u1 ON er.sender_id = u1.id
+            JOIN users u2 ON er.receiver_id = u2.id
+            WHERE s.id = ? AND (er.sender_id = ? OR er.receiver_id = ?)
+        `;
+        db.query(sql, [targetId, userId, userId], (err, results) => {
+            if (err) return res.status(500).json({ message: 'Server error' });
+            if (!results.length) return res.status(403).json({ message: 'Session not found or unauthorized' });
+
+            const session = results[0];
+            const partnerName = session.sender_id === userId ? session.receiver_name : session.sender_name;
+            const roomName = `skillbinimoy-session-${session.id}`;
+
+            return res.status(200).json({
+                roomName,
+                durationMinutes: 20, // Enforced 20-minute maximum limit for sessions
+                title: `${session.offered_skill} ↔ ${session.requested_skill}`,
+                partnerName
+            });
+        });
+    } else if (type === 'direct') {
+        const otherUserId = parseInt(targetId);
+        // Verify friendship (accepted request)
+        const sql = `
+            SELECT er.id, u.full_name as partner_name
+            FROM exchange_requests er
+            JOIN users u ON (CASE WHEN er.sender_id = ? THEN er.receiver_id = u.id ELSE er.sender_id = u.id END)
+            WHERE ((er.sender_id = ? AND er.receiver_id = ?) OR (er.sender_id = ? AND er.receiver_id = ?))
+              AND er.status = 'Accepted'
+            LIMIT 1
+        `;
+        db.query(sql, [userId, userId, otherUserId, otherUserId, userId], (err, results) => {
+            if (err) return res.status(500).json({ message: 'Server error' });
+            if (!results.length) return res.status(403).json({ message: 'You can only video call accepted friends' });
+
+            const minId = Math.min(userId, otherUserId);
+            const maxId = Math.max(userId, otherUserId);
+            const roomName = `skillbinimoy-call-${minId}-${maxId}`;
+
+            return res.status(200).json({
+                roomName,
+                durationMinutes: null,
+                title: `Video Call with ${results[0].partner_name}`,
+                partnerName: results[0].partner_name
+            });
+        });
+    } else if (type === 'group') {
+        const groupId = parseInt(targetId);
+        // Verify group membership
+        const sql = `
+            SELECT g.id, g.name
+            FROM groups_table g
+            JOIN group_members gm ON g.id = gm.group_id
+            WHERE g.id = ? AND gm.user_id = ?
+        `;
+        db.query(sql, [groupId, userId], (err, results) => {
+            if (err) return res.status(500).json({ message: 'Server error' });
+            if (!results.length) return res.status(403).json({ message: 'Not a member of this group' });
+
+            const roomName = `skillbinimoy-group-${groupId}`;
+            return res.status(200).json({
+                roomName,
+                durationMinutes: null,
+                title: `Group Call: ${results[0].name}`,
+                partnerName: results[0].name
+            });
+        });
+    } else {
+        return res.status(400).json({ message: 'Invalid call type' });
+    }
+};
+
+

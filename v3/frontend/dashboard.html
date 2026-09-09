@@ -155,6 +155,17 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Trending Skills Card -->
+                <div class="dashboard-card" style="margin-top:1.5rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                        <h3 style="margin:0;display:flex;align-items:center;gap:8px"><span>🔥</span> Trending Skills on the Platform</h3>
+                        <a href="marketplace.html" style="color:#6C63FF;font-size:0.875rem">Explore Marketplace →</a>
+                    </div>
+                    <div id="dashboardTrending" style="display:flex;flex-wrap:wrap;gap:10px">
+                        <p style="color:var(--text-secondary);font-size:0.875rem">Loading trending skills...</p>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -219,6 +230,31 @@
                     <p style="margin:0;color:var(--text-secondary);font-size:0.8rem">with ${partner} · ${dt.toLocaleDateString()}</p>
                 </div>`;
                     }).join('');
+                });
+
+            // Load trending skills
+            fetch(API + '/api/users/skills/trending')
+                .then(r => r.json())
+                .then(d => {
+                    const trending = d.trending || [];
+                    const el = document.getElementById('dashboardTrending');
+                    if (!trending.length) {
+                        el.innerHTML = '<p style="color:var(--text-secondary);font-size:0.875rem">No trending skills yet. Share yours in your profile!</p>';
+                        return;
+                    }
+                    el.innerHTML = trending.map(t => `
+                        <div style="background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.25);border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:10px">
+                            <span style="font-size:1.2rem">🎯</span>
+                            <div>
+                                <div style="font-weight:600;font-size:0.9rem;color:var(--text-primary)">${t.skill_name}</div>
+                                <div style="font-size:0.75rem;color:var(--text-secondary)">${t.teach_count} can teach · ${t.learn_count} want to learn</div>
+                            </div>
+                        </div>
+                    `).join('');
+                })
+                .catch(() => {
+                    const el = document.getElementById('dashboardTrending');
+                    if (el) el.style.display = 'none';
                 });
         })();
     </script>

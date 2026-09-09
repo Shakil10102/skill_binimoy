@@ -222,16 +222,27 @@
                     document.getElementById('statSkills').textContent = skillCount || '0';
                     document.getElementById('statExchanges').textContent = count * 2 + '+';
 
-                    // Popular skills from real users
-                    const allSkills = [];
-                    (d.users || []).forEach(u => { (u.skills_teach || []).forEach(s => allSkills.push(s)); });
-                    if (allSkills.length > 0) {
-                        const grid = document.getElementById('skillsGrid');
-                        const shown = [...new Set(allSkills)].slice(0, 8);
-                        grid.innerHTML = shown.map(s => `<div class="skill-card" style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:1.5rem;text-align:center"><div style="font-size:2rem;margin-bottom:0.5rem">🎯</div><h3 style="color:var(--text-primary)">${s}</h3></div>`).join('');
-                    } else {
-                        document.getElementById('skillsGrid').innerHTML = '<p style="color:var(--text-secondary);text-align:center;grid-column:1/-1">Be the first to add skills! <a href="register.html">Sign up now</a></p>';
-                    }
+                    // Load real trending / popular skills
+                    fetch(API + '/api/users/skills/trending')
+                        .then(r => r.json())
+                        .then(d => {
+                            const trending = d.trending || [];
+                            const grid = document.getElementById('skillsGrid');
+                            if (trending.length > 0) {
+                                grid.innerHTML = trending.slice(0, 8).map(t => `
+                                    <div class="skill-card" style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:1.5rem;text-align:center">
+                                        <div style="font-size:2rem;margin-bottom:0.5rem">🔥</div>
+                                        <h3 style="color:var(--text-primary);margin:0 0 0.5rem">${t.skill_name}</h3>
+                                        <p style="color:var(--text-secondary);font-size:0.8rem;margin:0">${t.teach_count} can teach · ${t.learn_count} want to learn</p>
+                                    </div>
+                                `).join('');
+                            } else {
+                                grid.innerHTML = '<p style="color:var(--text-secondary);text-align:center;grid-column:1/-1">Be the first to add skills! <a href="register.html">Sign up now</a></p>';
+                            }
+                        })
+                        .catch(() => {
+                            document.getElementById('skillsGrid').innerHTML = '<p style="color:var(--text-secondary);text-align:center;grid-column:1/-1">Sign in to see skills</p>';
+                        });
                 }).catch(() => {
                     document.getElementById('statUsers').textContent = '0';
                     document.getElementById('statSkills').textContent = '0';

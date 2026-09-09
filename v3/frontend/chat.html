@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/chatbot.css">
+    <link rel="stylesheet" href="css/videocall.css">
     <style>
         .chat-layout { display:grid; grid-template-columns:300px 1fr; height:calc(100vh - 70px); overflow:hidden; }
         .chat-sidebar { border-right:1px solid var(--border,#2a2a3a); display:flex; flex-direction:column; overflow:hidden; }
@@ -186,9 +188,12 @@
         if (el) el.classList.add('active');
 
         document.getElementById('chatArea').innerHTML = `
-            <div class="chat-header">
-                <div class="chat-avatar">${img ? `<img src="${img}">` : getInitials(name)}</div>
-                <div><h3 style="margin:0;font-size:1rem">${name}</h3><p style="margin:0;font-size:0.75rem;color:var(--text-secondary)">Skill Exchange Partner</p></div>
+            <div class="chat-header" style="justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:0.75rem">
+                    <div class="chat-avatar">${img ? `<img src="${img}">` : getInitials(name)}</div>
+                    <div><h3 style="margin:0;font-size:1rem">${name}</h3><p style="margin:0;font-size:0.75rem;color:var(--text-secondary)">Skill Exchange Partner</p></div>
+                </div>
+                <button class="btn-video-call" onclick="startBinimoyVideoCall({ type: 'direct', targetId: ${userId}, title: 'Video Call with ${name}', partnerName: '${name}' })">📹 Call</button>
             </div>
             <div class="messages-area" id="messagesArea"></div>
             <div class="chat-input-row">
@@ -272,9 +277,12 @@
         if (el) el.classList.add('active');
 
         document.getElementById('chatArea').innerHTML = `
-            <div class="chat-header">
-                <div class="chat-avatar group-avatar">${name[0].toUpperCase()}</div>
-                <div><h3 style="margin:0;font-size:1rem">${name}</h3><p style="margin:0;font-size:0.75rem;color:var(--text-secondary)">Group Chat</p></div>
+            <div class="chat-header" style="justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:0.75rem">
+                    <div class="chat-avatar group-avatar">${name[0].toUpperCase()}</div>
+                    <div><h3 style="margin:0;font-size:1rem">${name}</h3><p style="margin:0;font-size:0.75rem;color:var(--text-secondary)">Group Chat</p></div>
+                </div>
+                <button class="btn-video-call" onclick="startBinimoyVideoCall({ type: 'group', targetId: ${groupId}, title: 'Group Call: ${name}', partnerName: '${name}' })">📹 Group Call</button>
             </div>
             <div class="messages-area" id="messagesArea"></div>
             <div class="chat-input-row">
@@ -356,5 +364,7 @@
     loadGroups();
 })();
 </script>
+<script src="js/chatbot.js"></script>
+<script src="js/videocall.js"></script>
 </body>
 </html>

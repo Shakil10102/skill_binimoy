@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/chatbot.css">
+    <link rel="stylesheet" href="css/videocall.css">
 </head>
 <body>
 <div class="dashboard-container">
@@ -66,8 +67,8 @@
                     </div>
                     <div style="margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.75rem">
                         <div style="background:var(--bg-secondary,rgba(108,99,255,0.08));border-radius:8px;padding:0.75rem"><p style="margin:0;font-size:0.8rem;color:var(--text-secondary)">Date & Time</p><p style="margin:0.25rem 0 0;font-weight:500">${dt.toLocaleDateString()} ${dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</p></div>
-                        <div style="background:var(--bg-secondary,rgba(108,99,255,0.08));border-radius:8px;padding:0.75rem"><p style="margin:0;font-size:0.8rem;color:var(--text-secondary)">Duration</p><p style="margin:0.25rem 0 0;font-weight:500">${s.duration_minutes} min</p></div>
-                        ${s.meeting_link ? `<div style="background:var(--bg-secondary,rgba(108,99,255,0.08));border-radius:8px;padding:0.75rem"><p style="margin:0;font-size:0.8rem;color:var(--text-secondary)">Meeting</p><a href="${s.meeting_link}" target="_blank" style="color:#6C63FF;font-weight:500">Join Session →</a></div>` : ''}
+                        <div style="background:var(--bg-secondary,rgba(108,99,255,0.08));border-radius:8px;padding:0.75rem"><p style="margin:0;font-size:0.8rem;color:var(--text-secondary)">Max Duration</p><p style="margin:0.25rem 0 0;font-weight:500">20 min call limit</p></div>
+                        <div style="background:var(--bg-secondary,rgba(108,99,255,0.08));border-radius:8px;padding:0.75rem;display:flex;align-items:center"><button class="btn-video-call" onclick="startBinimoyVideoCall({ type: 'session', targetId: ${s.id}, title: '${s.offered_skill} ↔ ${s.requested_skill}', partnerName: '${partner}' })">📹 Start 20-Min Video Call</button></div>
                     </div>
                 </div>`;
             }).join('');
@@ -75,5 +76,6 @@
 })();
 </script>
 <script src="js/chatbot.js"></script>
+<script src="js/videocall.js"></script>
 </body>
 </html>

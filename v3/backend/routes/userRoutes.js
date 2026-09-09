@@ -16,6 +16,7 @@ router.get('/profile', protect, c.getProfile);
 router.put('/profile', protect, c.updateProfile);
 
 // Skills
+router.get('/skills/trending', c.getTrendingSkills);
 router.post('/skills', protect, c.addSkill);
 router.delete('/skills/:id', protect, c.deleteSkill);
 
@@ -50,5 +51,8 @@ router.get('/reviews/:userId', protect, c.getReviews);
 
 // AI Chatbot
 router.post('/chatbot', c.chatWithBot);
+
+// Video Room
+router.post('/video-room', protect, c.generateVideoRoom);
 
 module.exports = router;

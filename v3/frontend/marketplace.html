@@ -40,7 +40,20 @@
         </header>
 
         <div class="dashboard-content">
-            <h2 style="margin-bottom:1.5rem">Marketplace</h2>
+            <h2 style="margin-bottom:1rem">Marketplace</h2>
+
+            <!-- Trending Skills Section -->
+            <div class="dashboard-card" style="padding:1.25rem;margin-bottom:1.5rem">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.75rem">
+                    <span style="font-size:1.2rem">🔥</span>
+                    <h3 style="margin:0;font-size:1rem;font-weight:600">Trending Skills</h3>
+                    <span style="color:var(--text-secondary);font-size:0.8rem">(Tap a skill to filter)</span>
+                </div>
+                <div id="trendingChips" style="display:flex;flex-wrap:wrap;gap:8px">
+                    <span style="color:var(--text-secondary);font-size:0.85rem">Loading trending skills...</span>
+                </div>
+            </div>
+
             <div id="usersGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem">
                 <p style="color:var(--text-secondary)">Loading users...</p>
             </div>
@@ -145,6 +158,53 @@
     fetch(API + '/api/users/all', { headers: { 'Authorization': 'Bearer ' + token } })
         .then(r => r.json()).then(d => { allUsers = d.users || []; renderUsers(allUsers); })
         .catch(() => document.getElementById('usersGrid').innerHTML = '<p style="color:var(--text-secondary)">Failed to load users.</p>');
+
+    // Load Trending Skills
+    fetch(API + '/api/users/skills/trending')
+        .then(r => r.json())
+        .then(d => {
+            const trending = d.trending || [];
+            const container = document.getElementById('trendingChips');
+            if (!trending.length) {
+                container.innerHTML = '<span style="color:var(--text-secondary);font-size:0.85rem">No trending skills yet. Be the first to add skills!</span>';
+                return;
+            }
+            container.innerHTML = `
+                <button class="trending-chip" onclick="filterBySkill('all', this)" style="padding:6px 14px;border-radius:20px;border:1px solid #6C63FF;background:#6C63FF;color:white;cursor:pointer;font-size:0.85rem;font-weight:500;transition:all 0.2s">All</button>
+                ${trending.map(t => `
+                    <button class="trending-chip" onclick="filterBySkill('${t.skill_name.replace(/'/g, "\\'")}', this)" style="padding:6px 14px;border-radius:20px;border:1px solid rgba(108,99,255,0.3);background:rgba(108,99,255,0.1);color:#00C2FF;cursor:pointer;font-size:0.85rem;font-weight:500;transition:all 0.2s">
+                        🔥 ${t.skill_name} <span style="opacity:0.75;font-size:0.75rem">(${t.teach_count} teach · ${t.learn_count} want)</span>
+                    </button>
+                `).join('')}
+            `;
+        })
+        .catch(() => {
+            const el = document.getElementById('trendingChips');
+            if (el) el.innerHTML = '<span style="color:var(--text-secondary);font-size:0.85rem">Trending skills will appear here.</span>';
+        });
+
+    window.filterBySkill = function(skill, btn) {
+        document.querySelectorAll('.trending-chip').forEach(c => {
+            c.style.background = 'rgba(108,99,255,0.1)';
+            c.style.color = '#00C2FF';
+            c.style.borderColor = 'rgba(108,99,255,0.3)';
+        });
+        if (btn) {
+            btn.style.background = '#6C63FF';
+            btn.style.color = 'white';
+            btn.style.borderColor = '#6C63FF';
+        }
+        if (skill === 'all') {
+            renderUsers(allUsers);
+        } else {
+            const lower = skill.toLowerCase();
+            const filtered = allUsers.filter(u =>
+                (u.skills_teach || []).some(s => s.toLowerCase().includes(lower)) ||
+                (u.skills_learn || []).some(s => s.toLowerCase().includes(lower))
+            );
+            renderUsers(filtered);
+        }
+    };
 })();
 </script>
 <script src="js/chatbot.js"></script>
