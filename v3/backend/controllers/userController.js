@@ -752,4 +752,164 @@ exports.generateVideoRoom = (req, res) => {
     }
 };
 
+// ==========================================
+// REAL-TIME CALL REGISTRY (Messenger-style)
+// ==========================================
+const activeCalls = new Map();
+
+// Periodic cleanup of stale calls (older than 60 seconds)
+setInterval(() => {
+    const now = Date.now();
+    for (const [callId, call] of activeCalls.entries()) {
+        if (now - call.createdAt > 60000 || ['rejected', 'cancelled', 'ended'].includes(call.status)) {
+            activeCalls.delete(callId);
+        }
+    }
+}, 30000);
+
+// INITIATE CALL (User A calls User B)
+exports.initiateCall = (req, res) => {
+    const callerId = req.user.id;
+    const { receiverId } = req.body;
+
+    if (!receiverId) return res.status(400).json({ message: 'Receiver ID required' });
+    const targetUserId = parseInt(receiverId);
+
+    if (callerId === targetUserId) {
+        return res.status(400).json({ message: 'You cannot call yourself' });
+    }
+
+    // 1. Fetch Target User info
+    db.query('SELECT id, full_name, profile_image FROM users WHERE id = ?', [targetUserId], (errU, targetRows) => {
+        if (errU || !targetRows.length) return res.status(404).json({ message: 'User not found' });
+        const targetUser = targetRows[0];
+
+        // 2. Fetch Caller info
+        db.query('SELECT full_name, profile_image FROM users WHERE id = ?', [callerId], (errC, callerRows) => {
+            if (errC || !callerRows.length) return res.status(500).json({ message: 'Server error' });
+            const callerUser = callerRows[0];
+
+            // 3. Clear any existing calls for this caller/receiver pair
+            for (const [existingId, existingCall] of activeCalls.entries()) {
+                if (existingCall.callerId === callerId || existingCall.receiverId === callerId) {
+                    if (existingCall.status === 'ringing') {
+                        existingCall.status = 'cancelled';
+                    }
+                }
+            }
+
+            const minId = Math.min(callerId, targetUserId);
+            const maxId = Math.max(callerId, targetUserId);
+            const roomName = `skillbinimoy-call-${minId}-${maxId}`;
+            const callId = `call_${callerId}_${targetUserId}_${Date.now()}`;
+
+            const callData = {
+                callId,
+                callerId,
+                callerName: callerUser.full_name,
+                callerImage: callerUser.profile_image || '',
+                receiverId: targetUserId,
+                receiverName: targetUser.full_name,
+                receiverImage: targetUser.profile_image || '',
+                roomName,
+                status: 'ringing', // 'ringing', 'accepted', 'rejected', 'cancelled', 'timeout', 'ended'
+                createdAt: Date.now()
+            };
+
+            activeCalls.set(callId, callData);
+
+            res.status(200).json({
+                callId,
+                roomName,
+                partnerName: targetUser.full_name,
+                partnerImage: targetUser.profile_image || '',
+                status: 'ringing'
+            });
+        });
+    });
+};
+
+// CHECK CALL STATUS (Caller checks if Receiver accepted/rejected)
+exports.checkCallStatus = (req, res) => {
+    const { callId } = req.params;
+    const call = activeCalls.get(callId);
+
+    if (!call) {
+        return res.status(200).json({ status: 'ended' });
+    }
+
+    // Auto timeout if ringing > 35s
+    if (call.status === 'ringing' && Date.now() - call.createdAt > 35000) {
+        call.status = 'timeout';
+    }
+
+    res.status(200).json({
+        callId: call.callId,
+        status: call.status,
+        roomName: call.roomName
+    });
+};
+
+// GET INCOMING CALL (Receiver polls to see if anyone is calling them)
+exports.getIncomingCall = (req, res) => {
+    const userId = req.user.id;
+    const now = Date.now();
+
+    for (const call of activeCalls.values()) {
+        if (call.receiverId === userId && call.status === 'ringing') {
+            if (now - call.createdAt <= 35000) {
+                return res.status(200).json({
+                    incomingCall: {
+                        callId: call.callId,
+                        callerName: call.callerName,
+                        callerImage: call.callerImage,
+                        roomName: call.roomName,
+                        callerId: call.callerId
+                    }
+                });
+            } else {
+                call.status = 'timeout';
+            }
+        }
+    }
+
+    res.status(200).json({ incomingCall: null });
+};
+
+// RESPOND TO CALL (Receiver accepts or rejects/cuts)
+exports.respondCall = (req, res) => {
+    const userId = req.user.id;
+    const { callId, action } = req.body; // 'accept' or 'reject'
+
+    const call = activeCalls.get(callId);
+    if (!call || call.receiverId !== userId) {
+        return res.status(404).json({ message: 'Call not found or expired' });
+    }
+
+    if (action === 'accept') {
+        call.status = 'accepted';
+        return res.status(200).json({
+            message: 'Call accepted',
+            roomName: call.roomName,
+            partnerName: call.callerName
+        });
+    } else {
+        call.status = 'rejected';
+        return res.status(200).json({ message: 'Call rejected' });
+    }
+};
+
+// CANCEL CALL (Caller cancels before answered)
+exports.cancelCall = (req, res) => {
+    const userId = req.user.id;
+    const { callId } = req.body;
+
+    const call = activeCalls.get(callId);
+    if (call && call.callerId === userId) {
+        call.status = 'cancelled';
+    }
+    res.status(200).json({ message: 'Call cancelled' });
+};
+
+
 

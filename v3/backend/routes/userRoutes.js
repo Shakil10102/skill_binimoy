@@ -55,4 +55,11 @@ router.post('/chatbot', c.chatWithBot);
 // Video Room
 router.post('/video-room', protect, c.generateVideoRoom);
 
+// Real-Time Call Notification (Messenger style)
+router.post('/call/initiate', protect, c.initiateCall);
+router.get('/call/status', protect, c.getIncomingCall);
+router.get('/call/check/:callId', protect, c.checkCallStatus);
+router.post('/call/respond', protect, c.respondCall);
+router.post('/call/cancel', protect, c.cancelCall);
+
 module.exports = router;
