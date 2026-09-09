@@ -164,7 +164,7 @@
     color: #ffffff;
     border: none;
     border-radius: 8px;
-    padding: 8px 16px;
+    padding: 8px 14px;
     font-weight: 600;
     font-size: 0.85rem;
     cursor: pointer;
@@ -175,6 +175,222 @@
 .btn-video-call:hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 16px rgba(16, 185, 129, 0.45);
+}
+
+.btn-audio-call {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #6C63FF, #4F46E5);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
+}
+
+.btn-audio-call:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(108, 99, 255, 0.45);
+}
+
+/* ===================================================
+   Direct WebRTC Video & Audio In-Call Canvas
+   =================================================== */
+.binimoy-direct-call-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #090d16;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* Remote Fullscreen Video */
+.binimoy-remote-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #000000;
+}
+
+/* Local Picture-in-Picture Video */
+.binimoy-local-video-wrap {
+    position: absolute;
+    bottom: 90px;
+    right: 24px;
+    width: 180px;
+    height: 125px;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    border: 2px solid rgba(108, 99, 255, 0.6);
+    background: #111827;
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+.binimoy-local-video-wrap:hover {
+    transform: scale(1.05);
+}
+
+.binimoy-local-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1); /* Mirror view for selfie */
+}
+
+/* Direct Audio Call Canvas */
+.binimoy-direct-audio-canvas {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.binimoy-audio-soundwaves {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.binimoy-audio-soundwaves::before,
+.binimoy-audio-soundwaves::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #6C63FF;
+    animation: soundWavePulse 2.4s infinite ease-out;
+    pointer-events: none;
+}
+
+.binimoy-audio-soundwaves::after {
+    animation-delay: 1.2s;
+    border-color: #00C2FF;
+}
+
+@keyframes soundWavePulse {
+    0% { transform: scale(0.9); opacity: 0.8; }
+    50% { opacity: 0.4; }
+    100% { transform: scale(1.9); opacity: 0; }
+}
+
+.binimoy-audio-avatar-lg {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6C63FF, #00C2FF);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 3rem;
+    font-weight: 700;
+    box-shadow: 0 12px 36px rgba(108, 99, 255, 0.45);
+    overflow: hidden;
+    position: relative;
+    z-index: 2;
+}
+
+.binimoy-audio-avatar-lg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.binimoy-audio-partner-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 8px;
+}
+
+.binimoy-audio-call-status {
+    font-size: 0.95rem;
+    color: #10B981;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 16px;
+}
+
+/* Bottom In-Call Control Bar */
+.binimoy-incall-controls {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 10px 24px;
+    border-radius: 40px;
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    z-index: 20;
+}
+
+.binimoy-incall-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.binimoy-incall-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.08);
+}
+
+.binimoy-incall-btn.muted {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+.binimoy-incall-btn.end-call {
+    background: #ef4444;
+    width: 52px;
+    height: 52px;
+}
+
+.binimoy-incall-btn.end-call:hover {
+    background: #dc2626;
+}
+
+.binimoy-incall-btn svg {
+    width: 22px;
+    height: 22px;
 }
 
 /* Responsive adjustments */

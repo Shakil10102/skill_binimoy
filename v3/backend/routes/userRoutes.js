@@ -55,11 +55,14 @@ router.post('/chatbot', c.chatWithBot);
 // Video Room
 router.post('/video-room', protect, c.generateVideoRoom);
 
-// Real-Time Call Notification (Messenger style)
+// Real-Time Call Notification & WebRTC Signaling (Messenger style)
 router.post('/call/initiate', protect, c.initiateCall);
 router.get('/call/status', protect, c.getIncomingCall);
 router.get('/call/check/:callId', protect, c.checkCallStatus);
 router.post('/call/respond', protect, c.respondCall);
 router.post('/call/cancel', protect, c.cancelCall);
+router.post('/call/signal', protect, c.sendCallSignal);
+router.get('/call/signal/:callId', protect, c.getCallSignals);
 
 module.exports = router;
+

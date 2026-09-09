@@ -767,10 +767,10 @@ setInterval(() => {
     }
 }, 30000);
 
-// INITIATE CALL (User A calls User B)
+// INITIATE CALL (User A calls User B - Video or Audio)
 exports.initiateCall = (req, res) => {
     const callerId = req.user.id;
-    const { receiverId } = req.body;
+    const { receiverId, callType, offer } = req.body; // callType: 'video' | 'audio'
 
     if (!receiverId) return res.status(400).json({ message: 'Receiver ID required' });
     const targetUserId = parseInt(receiverId);
@@ -789,7 +789,7 @@ exports.initiateCall = (req, res) => {
             if (errC || !callerRows.length) return res.status(500).json({ message: 'Server error' });
             const callerUser = callerRows[0];
 
-            // 3. Clear any existing calls for this caller/receiver pair
+            // 3. Clear any existing active calls for this pair
             for (const [existingId, existingCall] of activeCalls.entries()) {
                 if (existingCall.callerId === callerId || existingCall.receiverId === callerId) {
                     if (existingCall.status === 'ringing') {
@@ -812,6 +812,11 @@ exports.initiateCall = (req, res) => {
                 receiverName: targetUser.full_name,
                 receiverImage: targetUser.profile_image || '',
                 roomName,
+                callType: (callType === 'audio') ? 'audio' : 'video',
+                offer: offer || null,
+                answer: null,
+                callerCandidates: [],
+                receiverCandidates: [],
                 status: 'ringing', // 'ringing', 'accepted', 'rejected', 'cancelled', 'timeout', 'ended'
                 createdAt: Date.now()
             };
@@ -821,6 +826,7 @@ exports.initiateCall = (req, res) => {
             res.status(200).json({
                 callId,
                 roomName,
+                callType: callData.callType,
                 partnerName: targetUser.full_name,
                 partnerImage: targetUser.profile_image || '',
                 status: 'ringing'
@@ -846,7 +852,9 @@ exports.checkCallStatus = (req, res) => {
     res.status(200).json({
         callId: call.callId,
         status: call.status,
-        roomName: call.roomName
+        callType: call.callType || 'video',
+        roomName: call.roomName,
+        answer: call.answer || null
     });
 };
 
@@ -864,7 +872,9 @@ exports.getIncomingCall = (req, res) => {
                         callerName: call.callerName,
                         callerImage: call.callerImage,
                         roomName: call.roomName,
-                        callerId: call.callerId
+                        callerId: call.callerId,
+                        callType: call.callType || 'video',
+                        offer: call.offer || null
                     }
                 });
             } else {
@@ -879,7 +889,7 @@ exports.getIncomingCall = (req, res) => {
 // RESPOND TO CALL (Receiver accepts or rejects/cuts)
 exports.respondCall = (req, res) => {
     const userId = req.user.id;
-    const { callId, action } = req.body; // 'accept' or 'reject'
+    const { callId, action, answer } = req.body; // 'accept' or 'reject'
 
     const call = activeCalls.get(callId);
     if (!call || call.receiverId !== userId) {
@@ -888,10 +898,13 @@ exports.respondCall = (req, res) => {
 
     if (action === 'accept') {
         call.status = 'accepted';
+        if (answer) call.answer = answer;
         return res.status(200).json({
             message: 'Call accepted',
             roomName: call.roomName,
-            partnerName: call.callerName
+            partnerName: call.callerName,
+            callType: call.callType || 'video',
+            offer: call.offer || null
         });
     } else {
         call.status = 'rejected';
@@ -899,17 +912,54 @@ exports.respondCall = (req, res) => {
     }
 };
 
-// CANCEL CALL (Caller cancels before answered)
+// CANCEL CALL (Caller cancels before answered, or either user ends call)
 exports.cancelCall = (req, res) => {
     const userId = req.user.id;
     const { callId } = req.body;
 
     const call = activeCalls.get(callId);
-    if (call && call.callerId === userId) {
-        call.status = 'cancelled';
+    if (call && (call.callerId === userId || call.receiverId === userId)) {
+        call.status = 'ended';
     }
-    res.status(200).json({ message: 'Call cancelled' });
+    res.status(200).json({ message: 'Call ended' });
 };
+
+// SEND CALL SIGNAL (Exchange ICE Candidates)
+exports.sendCallSignal = (req, res) => {
+    const userId = req.user.id;
+    const { callId, candidate, role } = req.body;
+    const call = activeCalls.get(callId);
+    if (!call) return res.status(404).json({ message: 'Call not found' });
+
+    if (candidate) {
+        if (role === 'caller' && call.callerId === userId) {
+            call.callerCandidates.push(candidate);
+        } else if (role === 'receiver' && call.receiverId === userId) {
+            call.receiverCandidates.push(candidate);
+        }
+    }
+    res.status(200).json({ status: 'ok' });
+};
+
+// GET CALL SIGNALS (Retrieve ICE Candidates from peer)
+exports.getCallSignals = (req, res) => {
+    const userId = req.user.id;
+    const { callId } = req.params;
+    const { role } = req.query; // 'caller' gets receiverCandidates; 'receiver' gets callerCandidates
+    const call = activeCalls.get(callId);
+    if (!call) return res.status(200).json({ candidates: [] });
+
+    let candidates = [];
+    if (role === 'caller' && call.callerId === userId) {
+        candidates = [...call.receiverCandidates];
+        call.receiverCandidates = [];
+    } else if (role === 'receiver' && call.receiverId === userId) {
+        candidates = [...call.callerCandidates];
+        call.callerCandidates = [];
+    }
+    res.status(200).json({ candidates });
+};
+
 
 
 
