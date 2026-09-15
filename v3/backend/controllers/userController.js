@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 const { db, getNextId } = require('../config/firebase');
-=======
-const db = require('../config/db');
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail');
@@ -11,7 +7,6 @@ const sendEmail = require('../utils/sendEmail');
 // REGISTER USER
 // ==========================================
 exports.registerUser = async (req, res) => {
-<<<<<<< HEAD
     try {
         const { full_name, email, password } = req.body;
         if (!full_name || !email || !password) {
@@ -76,61 +71,11 @@ exports.registerUser = async (req, res) => {
         console.error('Register error:', e);
         return res.status(500).json({ message: 'Server error: ' + e.message });
     }
-=======
-    const { full_name, email, password } = req.body;
-    if (!full_name || !email || !password)
-        return res.status(400).json({ message: 'All fields are required' });
-
-    // Gmail validation
-    const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
-    if (!gmailRegex.test(email)) {
-        return res.status(400).json({ message: 'Only @gmail.com addresses are allowed' });
-    }
-
-    if (password.length < 6)
-        return res.status(400).json({ message: 'Password must be at least 6 characters' });
-    try {
-        db.query('SELECT id FROM users WHERE email = ?', [email], async (err, result) => {
-            if (err) return res.status(500).json({ message: 'Server error' });
-            if (result.length > 0) return res.status(409).json({ message: 'Email already registered. Please login.' });
-
-            const hashedPassword = await bcrypt.hash(password, 10);
-
-            // Generate verification code
-            const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-            const verificationExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
-
-            db.query('INSERT INTO users (full_name, email, password, verification_code, verification_expires) VALUES (?, ?, ?, ?, ?)',
-                [full_name, email, hashedPassword, verificationCode, verificationExpires], async (err2, result2) => {
-                    if (err2) return res.status(500).json({ message: 'Registration failed. Please try again.' });
-
-                    try {
-                        await sendEmail(
-                            email,
-                            'Verify your Skill Binimoy account',
-                            `Your verification code is: ${verificationCode}. It expires in 10 minutes.`
-                        );
-                        res.status(201).json({
-                            message: 'Account created! Please check your Gmail for the verification code.',
-                            email
-                        });
-                    } catch (emailErr) {
-                        console.error('Email error:', emailErr);
-                        res.status(201).json({
-                            message: 'Account created, but failed to send verification email. Please try resending the code.',
-                            email
-                        });
-                    }
-                });
-        });
-    } catch (e) { res.status(500).json({ message: 'Server error.' }); }
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // VERIFY EMAIL
 // ==========================================
-<<<<<<< HEAD
 exports.verifyEmail = async (req, res) => {
     try {
         const { email, code } = req.body;
@@ -159,33 +104,11 @@ exports.verifyEmail = async (req, res) => {
         console.error('Verify email error:', err);
         return res.status(500).json({ message: 'Verification failed' });
     }
-=======
-exports.verifyEmail = (req, res) => {
-    const { email, code } = req.body;
-    if (!email || !code) return res.status(400).json({ message: 'Email and code are required' });
-
-    db.query('SELECT * FROM users WHERE email = ?', [email], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        if (result.length === 0) return res.status(404).json({ message: 'User not found' });
-
-        const user = result[0];
-        if (user.is_verified) return res.status(400).json({ message: 'Email already verified' });
-
-        if (user.verification_code !== code) return res.status(400).json({ message: 'Invalid verification code' });
-        if (new Date() > new Date(user.verification_expires)) return res.status(400).json({ message: 'Verification code expired' });
-
-        db.query('UPDATE users SET is_verified = TRUE, verification_code = NULL, verification_expires = NULL WHERE id = ?', [user.id], (err2) => {
-            if (err2) return res.status(500).json({ message: 'Verification failed' });
-            res.status(200).json({ message: 'Email verified successfully! You can now login.' });
-        });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // FORGOT PASSWORD
 // ==========================================
-<<<<<<< HEAD
 exports.forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
@@ -194,23 +117,10 @@ exports.forgotPassword = async (req, res) => {
         const successMsg = { message: 'If that email is registered, a reset code has been sent.' };
         const userSnap = await db.collection('users').where('email', '==', email.toLowerCase().trim()).limit(1).get();
         if (userSnap.empty) return res.status(200).json(successMsg);
-=======
-exports.forgotPassword = (req, res) => {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email is required' });
-
-    db.query('SELECT id FROM users WHERE email = ?', [email], async (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-
-        // Security: always return success
-        const successMsg = { message: 'If that email is registered, a reset code has been sent.' };
-        if (result.length === 0) return res.status(200).json(successMsg);
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 
         const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
         const resetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
-<<<<<<< HEAD
         await userSnap.docs[0].ref.update({
             reset_code: resetCode,
             reset_code_expires: resetExpires.toISOString()
@@ -231,31 +141,12 @@ exports.forgotPassword = (req, res) => {
         console.error('Forgot password error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-        db.query('UPDATE users SET reset_code = ?, reset_code_expires = ? WHERE email = ?',
-            [resetCode, resetExpires, email], async (err2) => {
-                if (err2) return res.status(500).json({ message: 'Server error' });
-
-                try {
-                    await sendEmail(
-                        email,
-                        'Password Reset Code - Skill Binimoy',
-                        `Your password reset code is: ${resetCode}. It expires in 10 minutes.`
-                    );
-                    res.status(200).json(successMsg);
-                } catch (emailErr) {
-                    res.status(500).json({ message: 'Failed to send email. Try again later.' });
-                }
-            });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // RESET PASSWORD
 // ==========================================
 exports.resetPassword = async (req, res) => {
-<<<<<<< HEAD
     try {
         const { email, code, newPassword } = req.body;
         if (!email || !code || !newPassword) {
@@ -283,32 +174,11 @@ exports.resetPassword = async (req, res) => {
         console.error('Reset password error:', err);
         return res.status(500).json({ message: 'Failed to reset password' });
     }
-=======
-    const { email, code, newPassword } = req.body;
-    if (!email || !code || !newPassword) return res.status(400).json({ message: 'All fields are required' });
-
-    db.query('SELECT * FROM users WHERE email = ?', [email], async (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        if (result.length === 0) return res.status(400).json({ message: 'Invalid email or code' });
-
-        const user = result[0];
-        if (user.reset_code !== code) return res.status(400).json({ message: 'Invalid reset code' });
-        if (new Date() > new Date(user.reset_code_expires)) return res.status(400).json({ message: 'Reset code expired' });
-
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        db.query('UPDATE users SET password = ?, reset_code = NULL, reset_code_expires = NULL WHERE id = ?',
-            [hashedPassword, user.id], (err2) => {
-                if (err2) return res.status(500).json({ message: 'Failed to reset password' });
-                res.status(200).json({ message: 'Password reset successfully! You can now login.' });
-            });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // RESEND CODE
 // ==========================================
-<<<<<<< HEAD
 exports.resendCode = async (req, res) => {
     try {
         const { email } = req.body;
@@ -346,38 +216,12 @@ exports.resendCode = async (req, res) => {
         console.error('Resend code error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-exports.resendCode = (req, res) => {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email is required' });
-
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const verificationExpires = new Date(Date.now() + 10 * 60 * 1000);
-
-    db.query('UPDATE users SET verification_code = ?, verification_expires = ? WHERE email = ? AND is_verified = FALSE',
-        [verificationCode, verificationExpires, email], async (err, result) => {
-            if (err) return res.status(500).json({ message: 'Server error' });
-            if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found or already verified' });
-
-            try {
-                await sendEmail(
-                    email,
-                    'Your New Verification Code',
-                    `Your new verification code is: ${verificationCode}. It expires in 10 minutes.`
-                );
-                res.status(200).json({ message: 'New code sent to your Gmail!' });
-            } catch (emailErr) {
-                res.status(500).json({ message: 'Failed to send email. Try again.' });
-            }
-        });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // LOGIN USER
 // ==========================================
 exports.loginUser = async (req, res) => {
-<<<<<<< HEAD
     try {
         const { email, password } = req.body;
         if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
@@ -410,35 +254,11 @@ exports.loginUser = async (req, res) => {
         console.error('Login error:', e);
         return res.status(500).json({ message: 'Server error.' });
     }
-=======
-    const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
-    try {
-        db.query('SELECT * FROM users WHERE email = ?', [email], async (err, result) => {
-            if (err) return res.status(500).json({ message: 'Server error' });
-            if (result.length === 0) return res.status(401).json({ message: 'Invalid email or password' });
-
-            const user = result[0];
-
-            // Check verification status
-            if (!user.is_verified) {
-                return res.status(403).json({ message: 'Please verify your email before logging in.', email: user.email });
-            }
-
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) return res.status(401).json({ message: 'Invalid email or password' });
-
-            const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
-            res.status(200).json({ message: 'Login successful!', token, user: { id: user.id, full_name: user.full_name, email: user.email, profile_image: user.profile_image } });
-        });
-    } catch (e) { res.status(500).json({ message: 'Server error.' }); }
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // GET PROFILE
 // ==========================================
-<<<<<<< HEAD
 exports.getProfile = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -468,28 +288,11 @@ exports.getProfile = async (req, res) => {
         console.error('Get profile error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-exports.getProfile = (req, res) => {
-    const userId = req.user.id;
-    db.query('SELECT id, full_name, email, bio, profile_image, cover_image, created_at FROM users WHERE id = ?', [userId], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        if (result.length === 0) return res.status(404).json({ message: 'User not found' });
-        const user = result[0];
-        // Get skills
-        db.query('SELECT id, skill_name, skill_type FROM skills WHERE user_id = ?', [userId], (err2, skills) => {
-            if (err2) return res.status(500).json({ message: 'Server error' });
-            user.skills_teach = skills.filter(s => s.skill_type === 'teach');
-            user.skills_learn = skills.filter(s => s.skill_type === 'learn');
-            res.status(200).json({ user });
-        });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // UPDATE PROFILE
 // ==========================================
-<<<<<<< HEAD
 exports.updateProfile = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -513,34 +316,11 @@ exports.updateProfile = async (req, res) => {
         console.error('Update profile error:', err);
         return res.status(500).json({ message: 'Failed to update profile' });
     }
-=======
-exports.updateProfile = (req, res) => {
-    const userId = req.user.id;
-    const { full_name, bio, profile_image, cover_image } = req.body;
-    if (!full_name || full_name.trim().length < 2)
-        return res.status(400).json({ message: 'Full name must be at least 2 characters' });
-
-    // Build dynamic query - only update image fields if provided
-    let sql = 'UPDATE users SET full_name = ?, bio = ?';
-    let params = [full_name.trim(), bio || ''];
-
-    if (profile_image !== undefined) { sql += ', profile_image = ?'; params.push(profile_image); }
-    if (cover_image !== undefined) { sql += ', cover_image = ?'; params.push(cover_image); }
-
-    sql += ' WHERE id = ?';
-    params.push(userId);
-
-    db.query(sql, params, (err) => {
-        if (err) { console.error('Update error:', err); return res.status(500).json({ message: 'Failed to update profile' }); }
-        res.status(200).json({ message: 'Profile updated successfully!' });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // ADD SKILL
 // ==========================================
-<<<<<<< HEAD
 exports.addSkill = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -568,23 +348,11 @@ exports.addSkill = async (req, res) => {
         console.error('Add skill error:', err);
         return res.status(500).json({ message: 'Failed to add skill' });
     }
-=======
-exports.addSkill = (req, res) => {
-    const userId = req.user.id;
-    const { skill_name, skill_type } = req.body;
-    if (!skill_name || !skill_type) return res.status(400).json({ message: 'Skill name and type required' });
-    if (!['teach', 'learn'].includes(skill_type)) return res.status(400).json({ message: 'skill_type must be teach or learn' });
-    db.query('INSERT INTO skills (user_id, skill_name, skill_type) VALUES (?, ?, ?)', [userId, skill_name.trim(), skill_type], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Failed to add skill' });
-        res.status(201).json({ message: 'Skill added!', skill: { id: result.insertId, skill_name: skill_name.trim(), skill_type } });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // DELETE SKILL
 // ==========================================
-<<<<<<< HEAD
 exports.deleteSkill = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -603,22 +371,11 @@ exports.deleteSkill = async (req, res) => {
         console.error('Delete skill error:', err);
         return res.status(500).json({ message: 'Failed to delete skill' });
     }
-=======
-exports.deleteSkill = (req, res) => {
-    const userId = req.user.id;
-    const skillId = req.params.id;
-    db.query('DELETE FROM skills WHERE id = ? AND user_id = ?', [skillId, userId], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Failed to delete skill' });
-        if (result.affectedRows === 0) return res.status(404).json({ message: 'Skill not found' });
-        res.status(200).json({ message: 'Skill deleted!' });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // GET ALL USERS (Marketplace)
 // ==========================================
-<<<<<<< HEAD
 exports.getAllUsers = async (req, res) => {
     try {
         const currentUserId = parseInt(req.user.id);
@@ -672,29 +429,11 @@ exports.getAllUsers = async (req, res) => {
         console.error('Get all users error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-exports.getAllUsers = (req, res) => {
-    const userId = req.user.id;
-    db.query('SELECT id, full_name, email, bio, profile_image FROM users WHERE id != ?', [userId], (err, users) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        if (users.length === 0) return res.status(200).json({ users: [] });
-        // Get skills for each user
-        db.query('SELECT user_id, skill_name, skill_type FROM skills WHERE user_id IN (?)', [users.map(u => u.id)], (err2, skills) => {
-            if (err2) return res.status(500).json({ message: 'Server error' });
-            users.forEach(u => {
-                u.skills_teach = skills.filter(s => s.user_id === u.id && s.skill_type === 'teach').map(s => s.skill_name);
-                u.skills_learn = skills.filter(s => s.user_id === u.id && s.skill_type === 'learn').map(s => s.skill_name);
-            });
-            res.status(200).json({ users });
-        });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // SEND REQUEST
 // ==========================================
-<<<<<<< HEAD
 exports.sendRequest = async (req, res) => {
     try {
         const sender_id = parseInt(req.user.id);
@@ -733,29 +472,11 @@ exports.sendRequest = async (req, res) => {
         console.error('Send request error:', err);
         return res.status(500).json({ message: 'Failed to send request' });
     }
-=======
-exports.sendRequest = (req, res) => {
-    const sender_id = req.user.id;
-    const { receiver_id, offered_skill, requested_skill, message } = req.body;
-    if (!receiver_id) return res.status(400).json({ message: 'Receiver required' });
-    // Check duplicate pending request
-    db.query('SELECT id FROM exchange_requests WHERE sender_id = ? AND receiver_id = ? AND status = "Pending"', [sender_id, receiver_id], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        if (result.length > 0) return res.status(409).json({ message: 'Request already sent to this user' });
-        db.query('INSERT INTO exchange_requests (sender_id, receiver_id, offered_skill, requested_skill, message) VALUES (?, ?, ?, ?, ?)',
-            [sender_id, receiver_id, offered_skill || '', requested_skill || '', message || ''],
-            (err2, result2) => {
-                if (err2) return res.status(500).json({ message: 'Failed to send request' });
-                res.status(201).json({ message: 'Request sent successfully!' });
-            });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // GET MY REQUESTS (received)
 // ==========================================
-<<<<<<< HEAD
 exports.getRequests = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -786,24 +507,11 @@ exports.getRequests = async (req, res) => {
         console.error('Get requests error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-exports.getRequests = (req, res) => {
-    const userId = req.user.id;
-    db.query(`SELECT er.*, u.full_name as sender_name, u.profile_image as sender_image 
-              FROM exchange_requests er 
-              JOIN users u ON er.sender_id = u.id 
-              WHERE er.receiver_id = ? 
-              ORDER BY er.created_at DESC`, [userId], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        res.status(200).json({ requests: result });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // UPDATE REQUEST STATUS
 // ==========================================
-<<<<<<< HEAD
 exports.updateRequest = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -827,24 +535,11 @@ exports.updateRequest = async (req, res) => {
         console.error('Update request error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-exports.updateRequest = (req, res) => {
-    const userId = req.user.id;
-    const { id } = req.params;
-    const { status } = req.body;
-    if (!['Accepted', 'Rejected'].includes(status)) return res.status(400).json({ message: 'Invalid status' });
-    db.query('UPDATE exchange_requests SET status = ? WHERE id = ? AND receiver_id = ?', [status, id, userId], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found' });
-        res.status(200).json({ message: `Request ${status}` });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // GET SESSIONS
 // ==========================================
-<<<<<<< HEAD
 exports.getSessions = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -891,27 +586,11 @@ exports.getSessions = async (req, res) => {
         console.error('Get sessions error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-exports.getSessions = (req, res) => {
-    const userId = req.user.id;
-    db.query(`SELECT s.*, er.offered_skill, er.requested_skill, er.sender_id, er.receiver_id,
-              u1.full_name as sender_name, u2.full_name as receiver_name
-              FROM sessions s
-              JOIN exchange_requests er ON s.request_id = er.id
-              JOIN users u1 ON er.sender_id = u1.id
-              JOIN users u2 ON er.receiver_id = u2.id
-              WHERE er.sender_id = ? OR er.receiver_id = ?
-              ORDER BY s.scheduled_at DESC`, [userId, userId], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        res.status(200).json({ sessions: result });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // CREATE SESSION (after accept)
 // ==========================================
-<<<<<<< HEAD
 exports.createSession = async (req, res) => {
     try {
         const { request_id, scheduled_at, duration_minutes, meeting_link } = req.body;
@@ -936,23 +615,11 @@ exports.createSession = async (req, res) => {
         console.error('Create session error:', err);
         return res.status(500).json({ message: 'Failed to create session' });
     }
-=======
-exports.createSession = (req, res) => {
-    const { request_id, scheduled_at, duration_minutes, meeting_link } = req.body;
-    if (!request_id || !scheduled_at) return res.status(400).json({ message: 'request_id and scheduled_at required' });
-    db.query('INSERT INTO sessions (request_id, scheduled_at, duration_minutes, meeting_link) VALUES (?, ?, ?, ?)',
-        [request_id, scheduled_at, duration_minutes || 60, meeting_link || ''],
-        (err, result) => {
-            if (err) return res.status(500).json({ message: 'Failed to create session' });
-            res.status(201).json({ message: 'Session scheduled!', session_id: result.insertId });
-        });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // GET MESSAGES
 // ==========================================
-<<<<<<< HEAD
 exports.getMessages = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -1000,26 +667,11 @@ exports.getMessages = async (req, res) => {
         console.error('Get messages error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-exports.getMessages = (req, res) => {
-    const userId = req.user.id;
-    const otherUserId = req.params.userId;
-    db.query(`SELECT m.*, u.full_name as sender_name FROM messages m
-              JOIN users u ON m.sender_id = u.id
-              WHERE (m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?)
-              ORDER BY m.created_at ASC`, [userId, otherUserId, otherUserId, userId], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        // Mark as read
-        db.query('UPDATE messages SET is_read = TRUE WHERE receiver_id = ? AND sender_id = ?', [userId, otherUserId], () => { });
-        res.status(200).json({ messages: result });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // SEND MESSAGE
 // ==========================================
-<<<<<<< HEAD
 exports.sendMessage = async (req, res) => {
     try {
         const sender_id = parseInt(req.user.id);
@@ -1085,37 +737,11 @@ exports.getChatUsers = async (req, res) => {
         console.error('Get chat users error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-exports.sendMessage = (req, res) => {
-    const sender_id = req.user.id;
-    const { receiver_id, message } = req.body;
-    if (!receiver_id || !message) return res.status(400).json({ message: 'receiver_id and message required' });
-    db.query('INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)', [sender_id, receiver_id, message], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Failed to send message' });
-        res.status(201).json({ message: 'Message sent!', id: result.insertId });
-    });
-};
-
-// ==========================================
-// GET CHAT USERS (users I have messages with)
-// ==========================================
-exports.getChatUsers = (req, res) => {
-    const userId = req.user.id;
-    db.query(`SELECT DISTINCT u.id, u.full_name, u.profile_image,
-              (SELECT COUNT(*) FROM messages WHERE receiver_id = ? AND sender_id = u.id AND is_read = FALSE) as unread
-              FROM messages m
-              JOIN users u ON (m.sender_id = u.id OR m.receiver_id = u.id)
-              WHERE (m.sender_id = ? OR m.receiver_id = ?) AND u.id != ?`, [userId, userId, userId, userId], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        res.status(200).json({ users: result });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // GET REVIEWS
 // ==========================================
-<<<<<<< HEAD
 exports.getReviews = async (req, res) => {
     try {
         const userId = parseInt(req.params.userId || req.user.id);
@@ -1143,22 +769,11 @@ exports.getReviews = async (req, res) => {
         console.error('Get reviews error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-exports.getReviews = (req, res) => {
-    const userId = req.params.userId || req.user.id;
-    db.query(`SELECT r.*, u.full_name as reviewer_name, u.profile_image as reviewer_image
-              FROM reviews r JOIN users u ON r.reviewer_id = u.id
-              WHERE r.reviewed_id = ? ORDER BY r.created_at DESC`, [userId], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        res.status(200).json({ reviews: result });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // GET FRIENDS (accepted exchange requests only)
 // ==========================================
-<<<<<<< HEAD
 exports.getFriends = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -1196,28 +811,11 @@ exports.getFriends = async (req, res) => {
         console.error('Get friends error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-exports.getFriends = (req, res) => {
-    const userId = req.user.id;
-    db.query(`SELECT DISTINCT u.id, u.full_name, u.profile_image
-              FROM exchange_requests er
-              JOIN users u ON (
-                  CASE WHEN er.sender_id = ? THEN er.receiver_id = u.id
-                  ELSE er.sender_id = u.id END
-              )
-              WHERE (er.sender_id = ? OR er.receiver_id = ?)
-              AND er.status = 'Accepted'
-              AND u.id != ?`, [userId, userId, userId, userId], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        res.status(200).json({ friends: result });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // CREATE GROUP
 // ==========================================
-<<<<<<< HEAD
 exports.createGroup = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -1256,31 +854,11 @@ exports.createGroup = async (req, res) => {
         console.error('Create group error:', err);
         return res.status(500).json({ message: 'Failed to create group' });
     }
-=======
-exports.createGroup = (req, res) => {
-    const userId = req.user.id;
-    const { group_name, member_ids } = req.body;
-    if (!group_name || !member_ids || !member_ids.length)
-        return res.status(400).json({ message: 'Group name and members required' });
-
-    db.query('INSERT INTO groups_table (name, created_by) VALUES (?, ?)', [group_name, userId], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Failed to create group' });
-        const groupId = result.insertId;
-        // Add creator + all members
-        const allMembers = [...new Set([userId, ...member_ids])];
-        const values = allMembers.map(id => [groupId, id]);
-        db.query('INSERT INTO group_members (group_id, user_id) VALUES ?', [values], (err2) => {
-            if (err2) return res.status(500).json({ message: 'Failed to add members' });
-            res.status(201).json({ message: 'Group created!', group_id: groupId });
-        });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // GET MY GROUPS
 // ==========================================
-<<<<<<< HEAD
 exports.getGroups = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -1327,26 +905,11 @@ exports.getGroups = async (req, res) => {
         console.error('Get groups error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-exports.getGroups = (req, res) => {
-    const userId = req.user.id;
-    db.query(`SELECT g.id, g.name, g.created_by, g.created_at,
-              (SELECT COUNT(*) FROM group_members WHERE group_id = g.id) as member_count,
-              (SELECT message FROM group_messages WHERE group_id = g.id ORDER BY created_at DESC LIMIT 1) as last_message
-              FROM groups_table g
-              JOIN group_members gm ON g.id = gm.group_id
-              WHERE gm.user_id = ?
-              ORDER BY g.created_at DESC`, [userId], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        res.status(200).json({ groups: result });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // GET GROUP MESSAGES
 // ==========================================
-<<<<<<< HEAD
 exports.getGroupMessages = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -1382,30 +945,11 @@ exports.getGroupMessages = async (req, res) => {
         console.error('Get group messages error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-exports.getGroupMessages = (req, res) => {
-    const userId = req.user.id;
-    const groupId = req.params.groupId;
-    // Check if user is member
-    db.query('SELECT id FROM group_members WHERE group_id = ? AND user_id = ?', [groupId, userId], (err, check) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        if (!check.length) return res.status(403).json({ message: 'Not a member of this group' });
-        db.query(`SELECT gm.*, u.full_name as sender_name, u.profile_image as sender_image
-                  FROM group_messages gm
-                  JOIN users u ON gm.sender_id = u.id
-                  WHERE gm.group_id = ?
-                  ORDER BY gm.created_at ASC`, [groupId], (err2, result) => {
-            if (err2) return res.status(500).json({ message: 'Server error' });
-            res.status(200).json({ messages: result });
-        });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // SEND GROUP MESSAGE
 // ==========================================
-<<<<<<< HEAD
 exports.sendGroupMessage = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -1434,28 +978,11 @@ exports.sendGroupMessage = async (req, res) => {
         console.error('Send group message error:', err);
         return res.status(500).json({ message: 'Failed to send message' });
     }
-=======
-exports.sendGroupMessage = (req, res) => {
-    const userId = req.user.id;
-    const groupId = req.params.groupId;
-    const { message } = req.body;
-    if (!message) return res.status(400).json({ message: 'Message required' });
-    // Check membership
-    db.query('SELECT id FROM group_members WHERE group_id = ? AND user_id = ?', [groupId, userId], (err, check) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        if (!check.length) return res.status(403).json({ message: 'Not a member of this group' });
-        db.query('INSERT INTO group_messages (group_id, sender_id, message) VALUES (?, ?, ?)', [groupId, userId, message], (err2, result) => {
-            if (err2) return res.status(500).json({ message: 'Failed to send message' });
-            res.status(201).json({ message: 'Sent!', id: result.insertId });
-        });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // GET GROUP MEMBERS
 // ==========================================
-<<<<<<< HEAD
 exports.getGroupMembers = async (req, res) => {
     try {
         const groupId = parseInt(req.params.groupId);
@@ -1480,17 +1007,6 @@ exports.getGroupMembers = async (req, res) => {
         console.error('Get group members error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-exports.getGroupMembers = (req, res) => {
-    const groupId = req.params.groupId;
-    db.query(`SELECT u.id, u.full_name, u.profile_image
-              FROM group_members gm
-              JOIN users u ON gm.user_id = u.id
-              WHERE gm.group_id = ?`, [groupId], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Server error' });
-        res.status(200).json({ members: result });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
@@ -1526,15 +1042,8 @@ Your responsibilities:
 - Keep answers concise, polite, well-formatted with Markdown (bullet points, bold text), and easy to read on mobile.`;
 
     try {
-<<<<<<< HEAD
         const contents = [];
         if (Array.isArray(history)) {
-=======
-        // Build contents array with optional history
-        const contents = [];
-        if (Array.isArray(history)) {
-            // Keep last 6 exchanges to manage token size
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
             const validHistory = history.slice(-6);
             for (const item of validHistory) {
                 if (item.role && item.text) {
@@ -1604,7 +1113,6 @@ Your responsibilities:
 // ==========================================
 // GET TRENDING SKILLS
 // ==========================================
-<<<<<<< HEAD
 exports.getTrendingSkills = async (req, res) => {
     try {
         const skillsSnap = await db.collection('skills').get();
@@ -1632,31 +1140,11 @@ exports.getTrendingSkills = async (req, res) => {
         console.error('Trending skills error:', err);
         return res.status(500).json({ message: 'Failed to get trending skills' });
     }
-=======
-exports.getTrendingSkills = (req, res) => {
-    const sql = `
-        SELECT skill_name, COUNT(*) as total_count,
-               SUM(CASE WHEN skill_type = 'teach' THEN 1 ELSE 0 END) as teach_count,
-               SUM(CASE WHEN skill_type = 'learn' THEN 1 ELSE 0 END) as learn_count
-        FROM skills
-        GROUP BY skill_name
-        ORDER BY total_count DESC, skill_name ASC
-        LIMIT 10
-    `;
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Trending skills error:', err);
-            return res.status(500).json({ message: 'Failed to get trending skills' });
-        }
-        res.status(200).json({ trending: results });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // ==========================================
 // GENERATE VIDEO ROOM (Jitsi Meet)
 // ==========================================
-<<<<<<< HEAD
 exports.generateVideoRoom = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -1715,57 +1203,6 @@ exports.generateVideoRoom = async (req, res) => {
 
             const otherUserDoc = await db.collection('users').doc(String(otherUserId)).get();
             const partnerName = otherUserDoc.exists ? otherUserDoc.data().full_name : 'Friend';
-=======
-exports.generateVideoRoom = (req, res) => {
-    const userId = req.user.id;
-    const { type, targetId } = req.body;
-
-    if (!type || !targetId) {
-        return res.status(400).json({ message: 'Call type and targetId are required' });
-    }
-
-    if (type === 'session') {
-        // Verify session membership
-        const sql = `
-            SELECT s.id, s.scheduled_at, er.sender_id, er.receiver_id,
-                   u1.full_name as sender_name, u2.full_name as receiver_name,
-                   er.offered_skill, er.requested_skill
-            FROM sessions s
-            JOIN exchange_requests er ON s.request_id = er.id
-            JOIN users u1 ON er.sender_id = u1.id
-            JOIN users u2 ON er.receiver_id = u2.id
-            WHERE s.id = ? AND (er.sender_id = ? OR er.receiver_id = ?)
-        `;
-        db.query(sql, [targetId, userId, userId], (err, results) => {
-            if (err) return res.status(500).json({ message: 'Server error' });
-            if (!results.length) return res.status(403).json({ message: 'Session not found or unauthorized' });
-
-            const session = results[0];
-            const partnerName = session.sender_id === userId ? session.receiver_name : session.sender_name;
-            const roomName = `skillbinimoy-session-${session.id}`;
-
-            return res.status(200).json({
-                roomName,
-                durationMinutes: 20, // Enforced 20-minute maximum limit for sessions
-                title: `${session.offered_skill} ↔ ${session.requested_skill}`,
-                partnerName
-            });
-        });
-    } else if (type === 'direct') {
-        const otherUserId = parseInt(targetId);
-        // Verify friendship (accepted request)
-        const sql = `
-            SELECT er.id, u.full_name as partner_name
-            FROM exchange_requests er
-            JOIN users u ON (CASE WHEN er.sender_id = ? THEN er.receiver_id = u.id ELSE er.sender_id = u.id END)
-            WHERE ((er.sender_id = ? AND er.receiver_id = ?) OR (er.sender_id = ? AND er.receiver_id = ?))
-              AND er.status = 'Accepted'
-            LIMIT 1
-        `;
-        db.query(sql, [userId, userId, otherUserId, otherUserId, userId], (err, results) => {
-            if (err) return res.status(500).json({ message: 'Server error' });
-            if (!results.length) return res.status(403).json({ message: 'You can only video call accepted friends' });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 
             const minId = Math.min(userId, otherUserId);
             const maxId = Math.max(userId, otherUserId);
@@ -1774,7 +1211,6 @@ exports.generateVideoRoom = (req, res) => {
             return res.status(200).json({
                 roomName,
                 durationMinutes: null,
-<<<<<<< HEAD
                 title: `Video Call with ${partnerName}`,
                 partnerName
             });
@@ -1798,35 +1234,6 @@ exports.generateVideoRoom = (req, res) => {
     } catch (err) {
         console.error('Generate video room error:', err);
         return res.status(500).json({ message: 'Server error' });
-=======
-                title: `Video Call with ${results[0].partner_name}`,
-                partnerName: results[0].partner_name
-            });
-        });
-    } else if (type === 'group') {
-        const groupId = parseInt(targetId);
-        // Verify group membership
-        const sql = `
-            SELECT g.id, g.name
-            FROM groups_table g
-            JOIN group_members gm ON g.id = gm.group_id
-            WHERE g.id = ? AND gm.user_id = ?
-        `;
-        db.query(sql, [groupId, userId], (err, results) => {
-            if (err) return res.status(500).json({ message: 'Server error' });
-            if (!results.length) return res.status(403).json({ message: 'Not a member of this group' });
-
-            const roomName = `skillbinimoy-group-${groupId}`;
-            return res.status(200).json({
-                roomName,
-                durationMinutes: null,
-                title: `Group Call: ${results[0].name}`,
-                partnerName: results[0].name
-            });
-        });
-    } else {
-        return res.status(400).json({ message: 'Invalid call type' });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
     }
 };
 
@@ -1846,7 +1253,6 @@ setInterval(() => {
 }, 30000);
 
 // INITIATE CALL (User A calls User B - Video or Audio)
-<<<<<<< HEAD
 exports.initiateCall = async (req, res) => {
     try {
         const callerId = parseInt(req.user.id);
@@ -1914,73 +1320,6 @@ exports.initiateCall = async (req, res) => {
         console.error('Initiate call error:', err);
         return res.status(500).json({ message: 'Server error' });
     }
-=======
-exports.initiateCall = (req, res) => {
-    const callerId = req.user.id;
-    const { receiverId, callType, offer } = req.body; // callType: 'video' | 'audio'
-
-    if (!receiverId) return res.status(400).json({ message: 'Receiver ID required' });
-    const targetUserId = parseInt(receiverId);
-
-    if (callerId === targetUserId) {
-        return res.status(400).json({ message: 'You cannot call yourself' });
-    }
-
-    // 1. Fetch Target User info
-    db.query('SELECT id, full_name, profile_image FROM users WHERE id = ?', [targetUserId], (errU, targetRows) => {
-        if (errU || !targetRows.length) return res.status(404).json({ message: 'User not found' });
-        const targetUser = targetRows[0];
-
-        // 2. Fetch Caller info
-        db.query('SELECT full_name, profile_image FROM users WHERE id = ?', [callerId], (errC, callerRows) => {
-            if (errC || !callerRows.length) return res.status(500).json({ message: 'Server error' });
-            const callerUser = callerRows[0];
-
-            // 3. Clear any existing active calls for this pair
-            for (const [existingId, existingCall] of activeCalls.entries()) {
-                if (existingCall.callerId === callerId || existingCall.receiverId === callerId) {
-                    if (existingCall.status === 'ringing') {
-                        existingCall.status = 'cancelled';
-                    }
-                }
-            }
-
-            const minId = Math.min(callerId, targetUserId);
-            const maxId = Math.max(callerId, targetUserId);
-            const roomName = `skillbinimoy-call-${minId}-${maxId}`;
-            const callId = `call_${callerId}_${targetUserId}_${Date.now()}`;
-
-            const callData = {
-                callId,
-                callerId,
-                callerName: callerUser.full_name,
-                callerImage: callerUser.profile_image || '',
-                receiverId: targetUserId,
-                receiverName: targetUser.full_name,
-                receiverImage: targetUser.profile_image || '',
-                roomName,
-                callType: (callType === 'audio') ? 'audio' : 'video',
-                offer: offer || null,
-                answer: null,
-                callerCandidates: [],
-                receiverCandidates: [],
-                status: 'ringing', // 'ringing', 'accepted', 'rejected', 'cancelled', 'timeout', 'ended'
-                createdAt: Date.now()
-            };
-
-            activeCalls.set(callId, callData);
-
-            res.status(200).json({
-                callId,
-                roomName,
-                callType: callData.callType,
-                partnerName: targetUser.full_name,
-                partnerImage: targetUser.profile_image || '',
-                status: 'ringing'
-            });
-        });
-    });
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 };
 
 // CHECK CALL STATUS (Caller checks if Receiver accepted/rejected)
@@ -2008,11 +1347,7 @@ exports.checkCallStatus = (req, res) => {
 
 // GET INCOMING CALL (Receiver polls to see if anyone is calling them)
 exports.getIncomingCall = (req, res) => {
-<<<<<<< HEAD
     const userId = parseInt(req.user.id);
-=======
-    const userId = req.user.id;
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
     const now = Date.now();
 
     for (const call of activeCalls.values()) {
@@ -2040,13 +1375,8 @@ exports.getIncomingCall = (req, res) => {
 
 // RESPOND TO CALL (Receiver accepts or rejects/cuts)
 exports.respondCall = (req, res) => {
-<<<<<<< HEAD
     const userId = parseInt(req.user.id);
     const { callId, action, answer } = req.body;
-=======
-    const userId = req.user.id;
-    const { callId, action, answer } = req.body; // 'accept' or 'reject'
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
 
     const call = activeCalls.get(callId);
     if (!call || call.receiverId !== userId) {
@@ -2071,11 +1401,7 @@ exports.respondCall = (req, res) => {
 
 // CANCEL CALL (Caller cancels before answered, or either user ends call)
 exports.cancelCall = (req, res) => {
-<<<<<<< HEAD
     const userId = parseInt(req.user.id);
-=======
-    const userId = req.user.id;
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
     const { callId } = req.body;
 
     const call = activeCalls.get(callId);
@@ -2087,11 +1413,7 @@ exports.cancelCall = (req, res) => {
 
 // SEND CALL SIGNAL (Exchange ICE Candidates)
 exports.sendCallSignal = (req, res) => {
-<<<<<<< HEAD
     const userId = parseInt(req.user.id);
-=======
-    const userId = req.user.id;
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
     const { callId, candidate, role } = req.body;
     const call = activeCalls.get(callId);
     if (!call) return res.status(404).json({ message: 'Call not found' });
@@ -2108,15 +1430,9 @@ exports.sendCallSignal = (req, res) => {
 
 // GET CALL SIGNALS (Retrieve ICE Candidates from peer)
 exports.getCallSignals = (req, res) => {
-<<<<<<< HEAD
     const userId = parseInt(req.user.id);
     const { callId } = req.params;
     const { role } = req.query;
-=======
-    const userId = req.user.id;
-    const { callId } = req.params;
-    const { role } = req.query; // 'caller' gets receiverCandidates; 'receiver' gets callerCandidates
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
     const call = activeCalls.get(callId);
     if (!call) return res.status(200).json({ candidates: [] });
 
@@ -2130,10 +1446,3 @@ exports.getCallSignals = (req, res) => {
     }
     res.status(200).json({ candidates });
 };
-<<<<<<< HEAD
-=======
-
-
-
-
->>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
