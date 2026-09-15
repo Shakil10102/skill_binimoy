@@ -1,4 +1,7 @@
 node_modules/
 .env
+<<<<<<< HEAD
 *serviceAccountKey*.json
 *firebase-adminsdk*.json
+=======
+>>>>>>> 17a17e23800d607b51f29a6c49dcd5ee82c05319
