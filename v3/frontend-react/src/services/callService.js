@@ -1,10 +1,12 @@
 import { api } from './api'
 
 export const callService = {
-  async initiateCall(receiver_id, call_type = 'video') {
+  async initiateCall(receiverId, callType = 'video') {
     return await api.post('/api/users/call/initiate', {
-      receiver_id,
-      call_type
+      receiverId,
+      receiver_id: receiverId,
+      callType,
+      call_type: callType
     })
   },
 
@@ -16,28 +18,34 @@ export const callService = {
     return await api.get(`/api/users/call/check/${callId}`)
   },
 
-  async respondCall(call_id, action) {
+  async respondCall(callId, action, answer = null) {
     return await api.post('/api/users/call/respond', {
-      call_id,
-      action // 'accept' | 'reject'
+      callId,
+      call_id: callId,
+      action,
+      answer
     })
   },
 
-  async cancelCall(call_id) {
+  async cancelCall(callId) {
     return await api.post('/api/users/call/cancel', {
-      call_id
+      callId,
+      call_id: callId
     })
   },
 
-  async sendCallSignal(call_id, type, payload) {
+  async sendCallSignal(callId, type, payload) {
     return await api.post('/api/users/call/signal', {
-      call_id,
-      type, // 'offer' | 'answer' | 'ice'
+      callId,
+      call_id: callId,
+      role: type,
+      type,
+      candidate: payload,
       payload
     })
   },
 
-  async getCallSignals(callId) {
-    return await api.get(`/api/users/call/signal/${callId}`)
+  async getCallSignals(callId, role = 'caller') {
+    return await api.get(`/api/users/call/signal/${callId}?role=${role}`)
   }
 }

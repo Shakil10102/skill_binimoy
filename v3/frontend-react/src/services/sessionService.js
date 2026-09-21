@@ -14,11 +14,13 @@ export const sessionService = {
     })
   },
 
-  async generateVideoRoom(type, target_id, duration_limit = 20) {
+  async generateVideoRoom(type, targetId, durationLimit = 20) {
     return await api.post('/api/users/video-room', {
       type,
-      target_id,
-      duration_limit
+      targetId,
+      target_id: targetId,
+      durationLimit,
+      duration_limit: durationLimit
     })
   }
 }

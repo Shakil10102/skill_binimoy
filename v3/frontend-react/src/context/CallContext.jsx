@@ -58,11 +58,13 @@ export function CallProvider({ children }) {
 
       try {
         const data = await callService.checkIncomingCall()
-        if (data && data.incoming && data.call) {
-          const call = data.call
+        const call = data?.incomingCall || data?.call
+        if (call) {
           setIncomingCall(call)
           startRingingSound(true)
-          startTitleFlash(`Incoming ${call.call_type || 'video'} call from ${call.caller_name || 'Someone'}`)
+          startTitleFlash(
+            `Incoming ${call.callType || call.call_type || 'video'} call from ${call.callerName || call.caller_name || 'Someone'}`
+          )
         }
       } catch {
         // Ignore polling errors
@@ -140,7 +142,7 @@ export function CallProvider({ children }) {
     // Direct 1-on-1 WebRTC Call
     try {
       const res = await callService.initiateCall(targetId, callType)
-      const callId = res.call_id
+      const callId = res.callId || res.call_id
 
       setActiveCall({
         callId,
@@ -255,18 +257,18 @@ export function CallProvider({ children }) {
     stopRingingSound()
     stopTitleFlash()
 
+    const callId = call.callId || call.call_id || call.id
     setActiveCall({
-      callId: call.id || call.call_id,
+      callId,
       isCaller: false,
       callType: selectedType,
-      partnerName: call.caller_name || 'Exchange Partner',
-      partnerImage: call.caller_avatar || '',
-      title: `Call with ${call.caller_name || 'Peer'}`,
+      partnerName: call.callerName || call.caller_name || 'Exchange Partner',
+      partnerImage: call.callerImage || call.caller_avatar || '',
+      title: `Call with ${call.callerName || call.caller_name || 'Peer'}`,
       status: 'connecting'
     })
 
     try {
-      const callId = call.id || call.call_id
       await callService.respondCall(callId, 'accept')
 
       const stream = await acquireMedia(selectedType)
@@ -330,7 +332,7 @@ export function CallProvider({ children }) {
   // 4. Reject Incoming Call
   const rejectCall = async () => {
     if (!incomingCall) return
-    const callId = incomingCall.id || incomingCall.call_id
+    const callId = incomingCall.callId || incomingCall.call_id || incomingCall.id
     setIncomingCall(null)
     stopRingingSound()
     stopTitleFlash()

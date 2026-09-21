@@ -1155,7 +1155,8 @@ exports.getTrendingSkills = async (req, res) => {
 exports.generateVideoRoom = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
-        const { type, targetId } = req.body;
+        const type = req.body.type;
+        const targetId = req.body.targetId || req.body.target_id;
 
         if (!type || !targetId) {
             return res.status(400).json({ message: 'Call type and targetId are required' });
@@ -1263,7 +1264,9 @@ setInterval(() => {
 exports.initiateCall = async (req, res) => {
     try {
         const callerId = parseInt(req.user.id);
-        const { receiverId, callType, offer } = req.body;
+        const receiverId = req.body.receiverId || req.body.receiver_id;
+        const callType = req.body.callType || req.body.call_type || 'video';
+        const offer = req.body.offer;
 
         if (!receiverId) return res.status(400).json({ message: 'Receiver ID required' });
         const targetUserId = parseInt(receiverId);
@@ -1383,7 +1386,9 @@ exports.getIncomingCall = (req, res) => {
 // RESPOND TO CALL (Receiver accepts or rejects/cuts)
 exports.respondCall = (req, res) => {
     const userId = parseInt(req.user.id);
-    const { callId, action, answer } = req.body;
+    const callId = req.body.callId || req.body.call_id;
+    const action = req.body.action;
+    const answer = req.body.answer;
 
     const call = activeCalls.get(callId);
     if (!call || call.receiverId !== userId) {
@@ -1409,7 +1414,7 @@ exports.respondCall = (req, res) => {
 // CANCEL CALL (Caller cancels before answered, or either user ends call)
 exports.cancelCall = (req, res) => {
     const userId = parseInt(req.user.id);
-    const { callId } = req.body;
+    const callId = req.body.callId || req.body.call_id;
 
     const call = activeCalls.get(callId);
     if (call && (call.callerId === userId || call.receiverId === userId)) {
@@ -1421,7 +1426,9 @@ exports.cancelCall = (req, res) => {
 // SEND CALL SIGNAL (Exchange ICE Candidates)
 exports.sendCallSignal = (req, res) => {
     const userId = parseInt(req.user.id);
-    const { callId, candidate, role } = req.body;
+    const callId = req.body.callId || req.body.call_id;
+    const candidate = req.body.candidate || req.body.payload;
+    const role = req.body.role || (req.body.type === 'caller' ? 'caller' : 'receiver');
     const call = activeCalls.get(callId);
     if (!call) return res.status(404).json({ message: 'Call not found' });
 
