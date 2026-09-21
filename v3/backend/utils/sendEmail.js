@@ -1,8 +1,38 @@
 const nodemailer = require('nodemailer');
 
+// Persistent connection pool singleton for fast (<500ms) email dispatch
+let cachedTransporter = null;
+let lastTransporterUser = null;
+let lastTransporterPass = null;
+
+function getTransporter(user, pass) {
+    const cleanPass = pass.replace(/\s+/g, '');
+    if (cachedTransporter && lastTransporterUser === user && lastTransporterPass === cleanPass) {
+        return cachedTransporter;
+    }
+
+    cachedTransporter = nodemailer.createTransport({
+        service: 'gmail',
+        pool: true,
+        maxConnections: 5,
+        maxMessages: 100,
+        rateLimit: 10,
+        socketTimeout: 10000,
+        connectionTimeout: 10000,
+        auth: {
+            user: user,
+            pass: cleanPass
+        }
+    });
+
+    lastTransporterUser = user;
+    lastTransporterPass = cleanPass;
+    return cachedTransporter;
+}
+
 /**
  * Send email using configured provider:
- * 1. Gmail SMTP (via Nodemailer) - recommended & easiest
+ * 1. Gmail SMTP (via pooled Nodemailer) - instant & reliable
  * 2. Brevo HTTP API
  * 3. Custom SMTP (via Nodemailer)
  * 4. Fallback logger (prints code clearly in terminal so verification never blocks)
@@ -14,18 +44,11 @@ const sendEmail = async (to, subject, text) => {
     const senderEmail = process.env.SENDER_EMAIL || gmailUser || 'no-reply@skillbinimoy.com';
 
     // -------------------------------------------------------------
-    // Provider 1: Gmail SMTP via Nodemailer
+    // Provider 1: Gmail SMTP via pooled Nodemailer (Fastest)
     // -------------------------------------------------------------
     if (gmailUser && gmailPass) {
         try {
-            const cleanPass = gmailPass.replace(/\s+/g, '');
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: gmailUser,
-                    pass: cleanPass
-                }
-            });
+            const transporter = getTransporter(gmailUser, gmailPass);
 
             const htmlContent = `
                 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 28px; background: #0F172A; color: #F8FAFC; border-radius: 16px; border: 1px solid #334155;">
@@ -36,7 +59,7 @@ const sendEmail = async (to, subject, text) => {
                     </div>
                     <div style="background: #1E293B; border-radius: 14px; padding: 22px; text-align: center; margin-bottom: 22px; border: 1px solid #334155;">
                         <p style="font-size: 14px; color: #94A3B8; margin: 0 0 10px 0;">${subject}</p>
-                        <p style="font-size: 18px; color: #FFFFFF; font-weight: 700; margin: 0; line-height: 1.5;">${text}</p>
+                        <p style="font-size: 20px; color: #00C2FF; font-weight: 800; letter-spacing: 2px; margin: 0; line-height: 1.5;">${text}</p>
                     </div>
                     <p style="font-size: 12px; color: #64748B; text-align: center; margin: 0; line-height: 1.5;">
                         If you did not request this email from Skill Binimoy, you can safely ignore it.
@@ -56,7 +79,8 @@ const sendEmail = async (to, subject, text) => {
             return { success: true, provider: 'gmail', info };
         } catch (gmailErr) {
             console.error('❌ Gmail SMTP error:', gmailErr.message);
-            // If Brevo is not configured, fall through to fallback
+            // Reset cached transporter in case of connection drop
+            cachedTransporter = null;
             if (!brevoApiKey) {
                 logEmailFallback(to, subject, text, gmailErr.message);
                 throw new Error('Gmail delivery failed: ' + gmailErr.message);

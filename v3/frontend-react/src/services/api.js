@@ -11,6 +11,11 @@ export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (isLocalHost ? 'http://localhost:5000' : 'https://skill-binimoy-backend.onrender.com')
 
+// Automatically pre-warm backend in background (wakes up Render container early)
+if (typeof window !== 'undefined') {
+  fetch(`${API_BASE_URL}/`, { method: 'GET' }).catch(() => {})
+}
+
 export function getToken() {
   if (typeof window === 'undefined') return null
   return localStorage.getItem('token')

@@ -8,6 +8,11 @@ import { ForgotPassword } from './pages/ForgotPassword'
 import { ResetPassword } from './pages/ResetPassword'
 import { Dashboard } from './pages/Dashboard'
 import { Marketplace } from './pages/Marketplace'
+import { Requests } from './pages/Requests'
+import { Sessions } from './pages/Sessions'
+import { Chat } from './pages/Chat'
+import { Profile } from './pages/Profile'
+import { Admin } from './pages/Admin'
 import { AuthProtectedView } from './pages/AuthProtectedView'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { MainLayout } from './components/layout/MainLayout'
@@ -26,7 +31,7 @@ export function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
-      {/* Phase 3 Protected Dashboard Route */}
+      {/* Protected App Routes */}
       <Route
         path="/dashboard"
         element={
@@ -36,12 +41,65 @@ export function App() {
         }
       />
 
-      {/* Phase 4 Protected Marketplace Route */}
       <Route
         path="/marketplace"
         element={
           <ProtectedRoute>
             <Marketplace />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/requests"
+        element={
+          <ProtectedRoute>
+            <Requests />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/sessions"
+        element={
+          <ProtectedRoute>
+            <Sessions />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/chat"
+        element={
+          <ProtectedRoute>
+            <Chat />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/messages"
+        element={
+          <ProtectedRoute>
+            <Chat />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <Admin />
           </ProtectedRoute>
         }
       />

@@ -50,25 +50,22 @@ exports.registerUser = async (req, res) => {
 
         await db.collection('users').doc(String(userId)).set(userDoc);
 
-        try {
-            await sendEmail(
-                email,
-                'Verify your Skill Binimoy account',
-                `Your verification code is: ${verificationCode}. It expires in 10 minutes.`
-            );
-            return res.status(201).json({
-                message: 'Account created! Please check your Gmail for the verification code.',
-                email,
-                verification_code: verificationCode
-            });
-        } catch (emailErr) {
-            console.warn('[Register Email Notice]:', emailErr.message);
-            return res.status(201).json({
-                message: `Account created! Verification code: ${verificationCode} (Configure GMAIL_USER & GMAIL_PASS in .env for direct inbox delivery).`,
-                email,
-                verification_code: verificationCode
-            });
-        }
+        // Dispatch email asynchronously in background so client response is instant (<300ms)
+        sendEmail(
+            email,
+            'Verify your Skill Binimoy account',
+            `Your verification code is: ${verificationCode}. It expires in 10 minutes.`
+        ).then(() => {
+            console.log(`✅ [Async Email Delivered] To: ${email}`);
+        }).catch((emailErr) => {
+            console.warn('[Async Register Email Notice]:', emailErr.message);
+        });
+
+        return res.status(201).json({
+            message: 'Account created! Please check your Gmail for the verification code.',
+            email,
+            verification_code: verificationCode
+        });
     } catch (e) {
         console.error('Register error:', e);
         return res.status(500).json({ message: 'Server error: ' + e.message });
@@ -128,20 +125,18 @@ exports.forgotPassword = async (req, res) => {
             reset_code_expires: resetExpires.toISOString()
         });
 
-        try {
-            await sendEmail(
-                email,
-                'Password Reset Code - Skill Binimoy',
-                `Your password reset code is: ${resetCode}. It expires in 10 minutes.`
-            );
-            return res.status(200).json(successMsg);
-        } catch (emailErr) {
-            console.warn('[Forgot Password Email Notice]:', emailErr.message);
-            return res.status(200).json({
-                message: `Password reset code: ${resetCode} (Configure GMAIL_USER & GMAIL_PASS in .env for direct inbox delivery).`,
-                reset_code: resetCode
-            });
-        }
+        // Dispatch email asynchronously in background
+        sendEmail(
+            email,
+            'Password Reset Code - Skill Binimoy',
+            `Your password reset code is: ${resetCode}. It expires in 10 minutes.`
+        ).then(() => {
+            console.log(`✅ [Async Reset Email Delivered] To: ${email}`);
+        }).catch((emailErr) => {
+            console.warn('[Async Forgot Password Email Notice]:', emailErr.message);
+        });
+
+        return res.status(200).json(successMsg);
     } catch (err) {
         console.error('Forgot password error:', err);
         return res.status(500).json({ message: 'Server error' });
@@ -207,20 +202,21 @@ exports.resendCode = async (req, res) => {
             verification_expires: verificationExpires.toISOString()
         });
 
-        try {
-            await sendEmail(
-                email,
-                'Your New Verification Code',
-                `Your new verification code is: ${verificationCode}. It expires in 10 minutes.`
-            );
-            return res.status(200).json({ message: 'New code sent to your Gmail!' });
-        } catch (emailErr) {
-            console.warn('[Resend Email Notice]:', emailErr.message);
-            return res.status(200).json({
-                message: `New verification code generated: ${verificationCode} (Configure GMAIL_USER & GMAIL_PASS in .env for direct inbox delivery).`,
-                verification_code: verificationCode
-            });
-        }
+        // Dispatch email asynchronously in background
+        sendEmail(
+            email,
+            'Your New Verification Code',
+            `Your new verification code is: ${verificationCode}. It expires in 10 minutes.`
+        ).then(() => {
+            console.log(`✅ [Async Resend Email Delivered] To: ${email}`);
+        }).catch((emailErr) => {
+            console.warn('[Async Resend Email Notice]:', emailErr.message);
+        });
+
+        return res.status(200).json({
+            message: 'New code sent to your Gmail!',
+            verification_code: verificationCode
+        });
     } catch (err) {
         console.error('Resend code error:', err);
         return res.status(500).json({ message: 'Server error' });
