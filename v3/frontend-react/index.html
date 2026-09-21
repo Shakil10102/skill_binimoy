@@ -19,9 +19,37 @@
       type="image/svg+xml"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'><circle cx='25' cy='25' r='23' stroke='%236C63FF' stroke-width='4' fill='%230F172A'/><path d='M15 25 L25 15 L35 25 L25 35 Z' fill='%2300C2FF'/></svg>"
     />
+
+    <!-- Automatic redirection if opened via VS Code Live Server (port 5500) or file protocol -->
+    <script>
+      (function () {
+        var p = window.location.port;
+        if (p === '5500' || p === '5501' || window.location.protocol === 'file:') {
+          window.location.replace('http://localhost:3000');
+        }
+      })();
+    </script>
   </head>
-  <body class="bg-[#0F172A] text-slate-100 antialiased selection:bg-[#6C63FF] selection:text-white">
-    <div id="root"></div>
+  <body class="bg-[#0F172A] text-slate-100 antialiased selection:bg-[#6C63FF] selection:text-white" style="margin:0;background:#0F172A;color:#F8FAFC;">
+    <div id="root">
+      <!-- Fallback display if opened via non-Vite server -->
+      <div style="min-height:100vh;background:#0F172A;color:#F8FAFC;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,-apple-system,sans-serif;padding:24px;text-align:center;">
+        <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#6C63FF,#00C2FF);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 12px 30px rgba(108,99,255,0.4);">
+          <svg viewBox="0 0 50 50" fill="none" style="width:38px;height:38px;">
+            <circle cx="25" cy="25" r="22" stroke="white" stroke-width="3" />
+            <path d="M15 25 L25 15 L35 25 L25 35 Z" fill="white" />
+          </svg>
+        </div>
+        <h1 style="font-size:26px;font-weight:800;margin:0 0 10px 0;color:white;letter-spacing:-0.5px;">Skill Binimoy</h1>
+        <p style="font-size:14px;color:#94A3B8;max-width:440px;margin:0 0 24px 0;line-height:1.6;">
+          Opening the Skill Binimoy development server at <strong>http://localhost:3000</strong>...
+        </p>
+        <a href="http://localhost:3000" style="background:linear-gradient(135deg,#6C63FF,#00C2FF);color:white;text-decoration:none;padding:12px 28px;border-radius:14px;font-weight:700;font-size:14px;box-shadow:0 4px 20px rgba(108,99,255,0.45);display:inline-flex;align-items:center;gap:8px;">
+          <span>Open Skill Binimoy (http://localhost:3000)</span>
+          <span>→</span>
+        </a>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

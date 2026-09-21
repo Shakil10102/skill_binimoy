@@ -1,6 +1,6 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAuth } from './context/AuthContext'
+import { Home } from './pages/Home'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { VerifyEmail } from './pages/VerifyEmail'
@@ -13,23 +13,11 @@ import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { MainLayout } from './components/layout/MainLayout'
 import { FoundationShowcase } from './pages/FoundationShowcase'
 
-function RootRedirect() {
-  const { isAuthenticated, isLoading } = useAuth()
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-[#6C63FF] border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
-  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
-}
-
 export function App() {
   return (
     <Routes>
-      {/* Root redirect based on auth status */}
-      <Route path="/" element={<RootRedirect />} />
+      {/* Landing Page Route - Public Entry */}
+      <Route path="/" element={<Home />} />
 
       {/* Phase 2 Authentication Routes */}
       <Route path="/login" element={<Login />} />
@@ -78,7 +66,7 @@ export function App() {
         }
       />
 
-      {/* Catch-all */}
+      {/* Catch-all: redirect to Home Landing Page */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
