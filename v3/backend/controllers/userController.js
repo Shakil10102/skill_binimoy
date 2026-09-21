@@ -383,7 +383,8 @@ exports.deleteSkill = async (req, res) => {
 // ==========================================
 exports.getAllUsers = async (req, res) => {
     try {
-        const currentUserId = parseInt(req.user.id);
+        const currentUserId = req.user ? parseInt(req.user.id) : null;
+        const includeSelf = req.query.include_self === 'true' || req.query.admin === 'true';
 
         // Fetch all users
         const usersSnap = await db.collection('users').get();
@@ -392,13 +393,14 @@ exports.getAllUsers = async (req, res) => {
 
         usersSnap.forEach(doc => {
             const u = doc.data();
-            if (u.id !== currentUserId) {
+            if (includeSelf || u.id !== currentUserId) {
                 users.push({
                     id: u.id,
                     full_name: u.full_name,
                     email: u.email,
                     bio: u.bio || '',
                     profile_image: u.profile_image || null,
+                    is_current_user: u.id === currentUserId,
                     skills_teach: [],
                     skills_learn: []
                 });

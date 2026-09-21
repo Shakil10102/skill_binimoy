@@ -4,43 +4,54 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Avatar } from '../components/ui/Avatar'
 import { marketplaceService } from '../services/marketplaceService'
+import { useAuth } from '../context/AuthContext'
+import { Button } from '../components/ui/Button'
 import {
   ShieldCheck,
   Users,
   Award,
   CheckCircle2,
   TrendingUp,
-  Activity
+  Activity,
+  RotateCw
 } from 'lucide-react'
 
 export function Admin() {
+  const { user } = useAuth()
   const [users, setUsers] = useState([])
   const [trending, setTrending] = useState([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const fetchData = async () => {
+    try {
+      const [usersRes, trendingRes] = await Promise.allSettled([
+        marketplaceService.getAllUsers({ include_self: 'true' }),
+        marketplaceService.getTrendingSkills()
+      ])
+
+      if (usersRes.status === 'fulfilled' && usersRes.value?.users) {
+        setUsers(usersRes.value.users)
+      }
+      if (trendingRes.status === 'fulfilled' && trendingRes.value?.trending) {
+        setTrending(trendingRes.value.trending)
+      }
+    } catch (err) {
+      console.error('Admin fetch error:', err)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [usersRes, trendingRes] = await Promise.allSettled([
-          marketplaceService.getAllUsers(),
-          marketplaceService.getTrendingSkills()
-        ])
-
-        if (usersRes.status === 'fulfilled' && usersRes.value?.users) {
-          setUsers(usersRes.value.users)
-        }
-        if (trendingRes.status === 'fulfilled' && trendingRes.value?.trending) {
-          setTrending(trendingRes.value.trending)
-        }
-      } catch (err) {
-        console.error('Admin fetch error:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchData()
   }, [])
+
+  const handleRefresh = () => {
+    setRefreshing(true)
+    fetchData()
+  }
 
   const totalTeach = trending.reduce((acc, curr) => acc + curr.teach_count, 0)
   const totalLearn = trending.reduce((acc, curr) => acc + curr.learn_count, 0)
@@ -59,6 +70,17 @@ export function Admin() {
               Real-time platform metrics, member activity, and skill exchange health.
             </p>
           </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={refreshing || loading}
+            className="gap-2 cursor-pointer self-start sm:self-auto"
+          >
+            <RotateCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <span>Refresh Data</span>
+          </Button>
         </div>
 
         {/* Metrics Grid */}
@@ -70,8 +92,8 @@ export function Admin() {
               </span>
               <Users className="w-5 h-5 text-indigo-400" />
             </div>
-            <div className="text-3xl font-extrabold text-white font-mono">{users.length + 1}</div>
-            <div className="text-xs text-slate-400 mt-1">100% verified Gmail accounts</div>
+            <div className="text-3xl font-extrabold text-white font-mono">{users.length}</div>
+            <div className="text-xs text-slate-400 mt-1">Verified platform members</div>
           </Card>
 
           <Card hover className="p-6 bg-gradient-to-br from-[#00C2FF]/20 to-[#00C2FF]/5 border-[#00C2FF]/30">
@@ -132,7 +154,14 @@ export function Admin() {
                     <tr key={u.id} className="hover:bg-slate-800/30 transition-colors">
                       <td className="py-3 px-4 flex items-center gap-3">
                         <Avatar src={u.profile_image} name={u.full_name} size="sm" />
-                        <span className="font-semibold text-white">{u.full_name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-white">{u.full_name}</span>
+                          {(u.is_current_user || u.id === user?.id) && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#6C63FF]/20 text-[#00C2FF] border border-[#6C63FF]/40">
+                              You
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 px-4 text-slate-300 font-mono text-xs">{u.email}</td>
                       <td className="py-3 px-4">

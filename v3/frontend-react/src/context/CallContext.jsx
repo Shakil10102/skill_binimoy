@@ -433,7 +433,24 @@ export function CallProvider({ children }) {
 export function useCall() {
   const context = useContext(CallContext)
   if (!context) {
-    throw new Error('useCall must be used within a CallProvider')
+    return {
+      incomingCall: null,
+      activeCall: null,
+      jitsiMeeting: null,
+      callDuration: 0,
+      isMicMuted: false,
+      isCamOff: false,
+      connectionState: 'idle',
+      localStream: null,
+      remoteStream: null,
+      startCall: () => {},
+      acceptCall: () => {},
+      rejectCall: () => {},
+      endCall: () => {},
+      toggleMic: () => {},
+      toggleCam: () => {}
+    }
   }
   return context
 }
+

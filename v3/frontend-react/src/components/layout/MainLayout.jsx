@@ -5,6 +5,9 @@ import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { Avatar } from '../ui/Avatar'
 import { AiChatbot } from '../ai/AiChatbot'
+import { IncomingCallDialog } from '../calls/IncomingCallDialog'
+import { ActiveCallModal } from '../calls/ActiveCallModal'
+import { JitsiMeetingModal } from '../calls/JitsiMeetingModal'
 import { Menu, Sun, Moon, Search, Sparkles, Bell } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
@@ -127,8 +130,14 @@ export function MainLayout({ children }) {
 
       {/* Global AI Chatbot Launcher */}
       <AiChatbot />
+
+      {/* Real-time WebRTC & Jitsi Call Dialogs */}
+      <IncomingCallDialog />
+      <ActiveCallModal />
+      <JitsiMeetingModal />
     </div>
   )
 }
+
 
 export default MainLayout
