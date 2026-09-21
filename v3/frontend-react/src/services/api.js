@@ -7,9 +7,9 @@ const isLocalHost = Boolean(
     window.location.hostname === '[::1]')
 )
 
-export const API_BASE_URL = isLocalHost
-  ? 'http://localhost:5000'
-  : 'https://skill-binimoy-backend.onrender.com'
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (isLocalHost ? 'http://localhost:5000' : 'https://skill-binimoy-backend.onrender.com')
 
 export function getToken() {
   if (typeof window === 'undefined') return null

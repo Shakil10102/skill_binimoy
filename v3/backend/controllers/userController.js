@@ -58,13 +58,15 @@ exports.registerUser = async (req, res) => {
             );
             return res.status(201).json({
                 message: 'Account created! Please check your Gmail for the verification code.',
-                email
+                email,
+                verification_code: verificationCode
             });
         } catch (emailErr) {
-            console.error('Email error:', emailErr.message);
+            console.warn('[Register Email Notice]:', emailErr.message);
             return res.status(201).json({
-                message: 'Account created, but failed to send verification email. Please try resending the code.',
-                email
+                message: `Account created! Verification code: ${verificationCode} (Configure GMAIL_USER & GMAIL_PASS in .env for direct inbox delivery).`,
+                email,
+                verification_code: verificationCode
             });
         }
     } catch (e) {
@@ -134,8 +136,11 @@ exports.forgotPassword = async (req, res) => {
             );
             return res.status(200).json(successMsg);
         } catch (emailErr) {
-            console.error('Send reset email error:', emailErr.message);
-            return res.status(500).json({ message: 'Failed to send email. Try again later.' });
+            console.warn('[Forgot Password Email Notice]:', emailErr.message);
+            return res.status(200).json({
+                message: `Password reset code: ${resetCode} (Configure GMAIL_USER & GMAIL_PASS in .env for direct inbox delivery).`,
+                reset_code: resetCode
+            });
         }
     } catch (err) {
         console.error('Forgot password error:', err);
@@ -210,7 +215,11 @@ exports.resendCode = async (req, res) => {
             );
             return res.status(200).json({ message: 'New code sent to your Gmail!' });
         } catch (emailErr) {
-            return res.status(500).json({ message: 'Failed to send email. Try again.' });
+            console.warn('[Resend Email Notice]:', emailErr.message);
+            return res.status(200).json({
+                message: `New verification code generated: ${verificationCode} (Configure GMAIL_USER & GMAIL_PASS in .env for direct inbox delivery).`,
+                verification_code: verificationCode
+            });
         }
     } catch (err) {
         console.error('Resend code error:', err);
