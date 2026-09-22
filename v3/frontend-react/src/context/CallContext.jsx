@@ -91,17 +91,17 @@ export function CallProvider({ children }) {
       return stream
     } catch (err) {
       if (isVideo) {
-        // Audio fallback
+        // Audio fallback if camera is unavailable or blocked
         try {
           const fallback = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
           localStreamRef.current = fallback
           setLocalStream(fallback)
           return fallback
         } catch {
-          throw new Error('Microphone and camera permissions are required to place calls.')
+          throw new Error('Microphone permission is required to place calls.')
         }
       }
-      throw err
+      throw new Error('Microphone permission is required to place calls.')
     }
   }
 
@@ -122,26 +122,72 @@ export function CallProvider({ children }) {
   }
 
   // 2. Start Outgoing Call
-  const startCall = async ({ type = 'direct', callType = 'video', targetId, title, partnerName, partnerImage }) => {
+  const startCall = async ({ type = 'direct', callType = 'video', targetId, title, partnerName, partnerImage, meetingLink }) => {
     if (type === 'session' || type === 'group') {
       // Jitsi Meet Room
       try {
         const res = await sessionService.generateVideoRoom(type, targetId, 20)
-        const roomName = res.room_name || `skill-binimoy-${type}-${targetId}`
+        const roomName = res.roomName || res.room_name || `skillbinimoy-${type}-${targetId}`
         setJitsiMeeting({
           roomName,
-          title: title || `${type === 'group' ? 'Group' : 'Session'} Call`,
-          durationMinutes: 20
+          title: res.title || title || `${type === 'group' ? 'Group' : 'Session'} Call`,
+          durationMinutes: res.durationMinutes || 20,
+          meetingLink: meetingLink || `https://meet.jit.si/${roomName}`
         })
       } catch (err) {
-        alert(err.message || 'Could not create conference room.')
+        if (meetingLink) {
+          const roomFromLink = meetingLink.split('/').pop() || `skillbinimoy-${type}-${targetId}`
+          setJitsiMeeting({
+            roomName: roomFromLink,
+            title: title || `${type === 'group' ? 'Group' : 'Session'} Call`,
+            durationMinutes: 20,
+            meetingLink
+          })
+        } else {
+          alert(err.message || 'Could not join conference room.')
+        }
       }
       return
     }
 
     // Direct 1-on-1 WebRTC Call
     try {
-      const res = await callService.initiateCall(targetId, callType)
+      setConnectionState('calling')
+
+      // 1. Acquire Local Media
+      const stream = await acquireMedia(callType)
+
+      // 2. Create WebRTC PeerConnection
+      const pc = new RTCPeerConnection(RTC_CONFIG)
+      peerConnectionRef.current = pc
+
+      pc.ontrack = (event) => {
+        const remoteMediaStream = (event.streams && event.streams[0]) || new MediaStream([event.track])
+        remoteStreamRef.current = remoteMediaStream
+        setRemoteStream(remoteMediaStream)
+      }
+
+      pc.onconnectionstatechange = () => {
+        if (peerConnectionRef.current) {
+          const state = peerConnectionRef.current.connectionState
+          setConnectionState(state)
+          if (['disconnected', 'failed', 'closed'].includes(state)) {
+            endCall()
+          }
+        }
+      }
+
+      stream.getTracks().forEach((track) => pc.addTrack(track, stream))
+
+      // 3. Create Offer
+      const offer = await pc.createOffer()
+      await pc.setLocalDescription(offer)
+
+      // 4. Send call initiation with offer to backend
+      const res = await callService.initiateCall(targetId, callType, {
+        type: offer.type,
+        sdp: offer.sdp
+      })
       const callId = res.callId || res.call_id
 
       setActiveCall({
@@ -154,97 +200,74 @@ export function CallProvider({ children }) {
         status: 'calling'
       })
 
+      // Setup ICE candidate sender with callId
+      pc.onicecandidate = (e) => {
+        if (e.candidate) {
+          callService.sendCallSignal(callId, 'ice', e.candidate.toJSON(), 'caller').catch(() => {})
+        }
+      }
+
       setConnectionState('ringing')
       startRingingSound(false)
       startTitleFlash(`Calling ${partnerName || 'Peer'}...`)
 
-      // Poll call status until accepted or rejected
+      // 5. Poll call status until accepted or rejected
+      let connected = false
       outgoingPollIntervalRef.current = setInterval(async () => {
         try {
           const check = await callService.checkCallStatus(callId)
-          if (check.status === 'accepted') {
+          if (check.status === 'accepted' && !connected) {
+            connected = true
             clearInterval(outgoingPollIntervalRef.current)
             stopRingingSound()
             stopTitleFlash()
-            connectAsCaller(callId, callType)
-          } else if (['rejected', 'ended', 'missed'].includes(check.status)) {
+
+            // Set remote description from answer
+            if (check.answer && pc.signalingState !== 'stable') {
+              await pc.setRemoteDescription(new RTCSessionDescription(check.answer))
+            } else {
+              const sig = await callService.getCallSignals(callId, 'caller')
+              if (sig.answer && pc.signalingState !== 'stable') {
+                await pc.setRemoteDescription(new RTCSessionDescription(sig.answer))
+              }
+            }
+
+            setActiveCall((prev) => (prev ? { ...prev, status: 'connected' } : null))
+            setConnectionState('connected')
+            startDurationTimer()
+
+            // Poll ICE candidates from receiver
+            signalingPollIntervalRef.current = setInterval(async () => {
+              try {
+                const sig = await callService.getCallSignals(callId, 'caller')
+                if (sig.candidates && sig.candidates.length) {
+                  for (const cand of sig.candidates) {
+                    try {
+                      await pc.addIceCandidate(new RTCIceCandidate(cand))
+                    } catch {}
+                  }
+                }
+              } catch {}
+            }, 1200)
+
+          } else if (['rejected', 'ended', 'missed', 'timeout'].includes(check.status)) {
             clearInterval(outgoingPollIntervalRef.current)
             stopRingingSound()
             stopTitleFlash()
             endCall()
-            alert(`Call ${check.status === 'rejected' ? 'declined' : 'ended'}.`)
+            if (check.status === 'rejected') alert('Call declined.')
+            else if (check.status === 'timeout') alert('No answer.')
           }
         } catch {
           // continue polling
         }
-      }, 2000)
-    } catch (err) {
-      alert(err.message || 'Could not initiate call.')
-      endCall()
-    }
-  }
-
-  // Connect as WebRTC Caller
-  const connectAsCaller = async (callId, callType) => {
-    try {
-      setConnectionState('connecting')
-      const stream = await acquireMedia(callType)
-      const pc = new RTCPeerConnection(RTC_CONFIG)
-      peerConnectionRef.current = pc
-
-      const rStream = new MediaStream()
-      remoteStreamRef.current = rStream
-      setRemoteStream(rStream)
-
-      pc.ontrack = (event) => {
-        event.streams[0].getTracks().forEach((track) => {
-          rStream.addTrack(track)
-        })
-      }
-
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream))
-
-      // ICE handling
-      pc.onicecandidate = (e) => {
-        if (e.candidate) {
-          callService.sendCallSignal(callId, 'ice', e.candidate.toJSON()).catch(() => {})
-        }
-      }
-
-      pc.onconnectionstatechange = () => {
-        setConnectionState(pc.connectionState)
-      }
-
-      const offer = await pc.createOffer()
-      await pc.setLocalDescription(offer)
-
-      await callService.sendCallSignal(callId, 'offer', {
-        type: offer.type,
-        sdp: offer.sdp
-      })
-
-      setActiveCall((prev) => ({ ...prev, status: 'connected' }))
-      startDurationTimer()
-
-      // Poll for Receiver's SDP Answer & ICE candidates
-      signalingPollIntervalRef.current = setInterval(async () => {
-        try {
-          const sig = await callService.getCallSignals(callId)
-          if (sig.signals?.receiver_answer && !pc.currentRemoteDescription) {
-            await pc.setRemoteDescription(new RTCSessionDescription(sig.signals.receiver_answer))
-          }
-          if (sig.signals?.receiver_ice) {
-            for (const cand of sig.signals.receiver_ice) {
-              try {
-                await pc.addIceCandidate(new RTCIceCandidate(cand))
-              } catch {}
-            }
-          }
-        } catch {}
       }, 1500)
     } catch (err) {
-      console.error('Caller connection error:', err)
+      console.error('Initiate call error:', err)
+      stopRingingSound()
+      stopTitleFlash()
       endCall()
+      alert(err.message || 'Could not initiate call.')
     }
   }
 
@@ -252,12 +275,13 @@ export function CallProvider({ children }) {
   const acceptCall = async (preferredType) => {
     if (!incomingCall) return
     const call = incomingCall
-    const selectedType = preferredType || call.call_type || 'video'
+    const selectedType = preferredType || call.callType || call.call_type || 'video'
+    const callId = call.callId || call.call_id || call.id
+
     setIncomingCall(null)
     stopRingingSound()
     stopTitleFlash()
 
-    const callId = call.callId || call.call_id || call.id
     setActiveCall({
       callId,
       isCaller: false,
@@ -269,63 +293,86 @@ export function CallProvider({ children }) {
     })
 
     try {
-      await callService.respondCall(callId, 'accept')
+      setConnectionState('connecting')
 
+      // 1. Acquire Local Media
       const stream = await acquireMedia(selectedType)
+
+      // 2. Create WebRTC PeerConnection
       const pc = new RTCPeerConnection(RTC_CONFIG)
       peerConnectionRef.current = pc
 
-      const rStream = new MediaStream()
-      remoteStreamRef.current = rStream
-      setRemoteStream(rStream)
-
       pc.ontrack = (event) => {
-        event.streams[0].getTracks().forEach((track) => {
-          rStream.addTrack(track)
-        })
+        const remoteMediaStream = (event.streams && event.streams[0]) || new MediaStream([event.track])
+        remoteStreamRef.current = remoteMediaStream
+        setRemoteStream(remoteMediaStream)
+      }
+
+      pc.onconnectionstatechange = () => {
+        if (peerConnectionRef.current) {
+          const state = peerConnectionRef.current.connectionState
+          setConnectionState(state)
+          if (['disconnected', 'failed', 'closed'].includes(state)) {
+            endCall()
+          }
+        }
       }
 
       stream.getTracks().forEach((track) => pc.addTrack(track, stream))
 
       pc.onicecandidate = (e) => {
         if (e.candidate) {
-          callService.sendCallSignal(callId, 'ice', e.candidate.toJSON()).catch(() => {})
+          callService.sendCallSignal(callId, 'ice', e.candidate.toJSON(), 'receiver').catch(() => {})
         }
       }
 
-      pc.onconnectionstatechange = () => {
-        setConnectionState(pc.connectionState)
+      // 3. Set remote description from caller's offer
+      let offer = call.offer
+      if (!offer) {
+        const sig = await callService.getCallSignals(callId, 'receiver')
+        offer = sig.offer
       }
 
-      // Poll for Caller's SDP Offer
-      let answered = false
+      if (!offer) {
+        throw new Error('Call offer was not received.')
+      }
+
+      await pc.setRemoteDescription(new RTCSessionDescription(offer))
+
+      // 4. Create Answer
+      const answer = await pc.createAnswer()
+      await pc.setLocalDescription(answer)
+
+      // 5. Send answer in accept response
+      await callService.respondCall(callId, 'accept', {
+        type: answer.type,
+        sdp: answer.sdp
+      })
+
+      callService.sendCallSignal(callId, 'answer', { type: answer.type, sdp: answer.sdp }, 'receiver').catch(() => {})
+
+      setActiveCall((prev) => (prev ? { ...prev, status: 'connected' } : null))
+      setConnectionState('connected')
+      startDurationTimer()
+
+      // 6. Poll ICE candidates from caller
       signalingPollIntervalRef.current = setInterval(async () => {
         try {
-          const sig = await callService.getCallSignals(callId)
-          if (sig.signals?.caller_offer && !answered) {
-            answered = true
-            await pc.setRemoteDescription(new RTCSessionDescription(sig.signals.caller_offer))
-            const answer = await pc.createAnswer()
-            await pc.setLocalDescription(answer)
-            await callService.sendCallSignal(callId, 'answer', {
-              type: answer.type,
-              sdp: answer.sdp
-            })
-            setActiveCall((prev) => ({ ...prev, status: 'connected' }))
-            startDurationTimer()
-          }
-          if (sig.signals?.caller_ice) {
-            for (const cand of sig.signals.caller_ice) {
+          const sig = await callService.getCallSignals(callId, 'receiver')
+          if (sig.candidates && sig.candidates.length) {
+            for (const cand of sig.candidates) {
               try {
                 await pc.addIceCandidate(new RTCIceCandidate(cand))
               } catch {}
             }
           }
         } catch {}
-      }, 1500)
+      }, 1200)
+
     } catch (err) {
       console.error('Accept call error:', err)
       endCall()
+      alert(err.message || 'Failed to establish call.')
     }
   }
 
@@ -371,7 +418,9 @@ export function CallProvider({ children }) {
 
     // Close PeerConnection
     if (peerConnectionRef.current) {
-      peerConnectionRef.current.close()
+      try {
+        peerConnectionRef.current.close()
+      } catch {}
       peerConnectionRef.current = null
     }
 

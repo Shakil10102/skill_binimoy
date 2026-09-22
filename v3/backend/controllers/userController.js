@@ -449,16 +449,52 @@ exports.sendRequest = async (req, res) => {
         if (!receiver_id) return res.status(400).json({ message: 'Receiver required' });
         const targetReceiverId = parseInt(receiver_id);
 
-        // Check duplicate pending request
-        const dupSnap = await db.collection('exchange_requests')
-            .where('sender_id', '==', sender_id)
-            .where('receiver_id', '==', targetReceiverId)
-            .where('status', '==', 'Pending')
-            .limit(1)
-            .get();
+        if (sender_id === targetReceiverId) {
+            return res.status(400).json({ message: 'Cannot send exchange request to yourself' });
+        }
 
-        if (!dupSnap.empty) {
-            return res.status(409).json({ message: 'Request already sent to this user' });
+        // 1. Check if already friends (Accepted request exists in either direction)
+        const [acceptedSnap1, acceptedSnap2] = await Promise.all([
+            db.collection('exchange_requests')
+                .where('sender_id', '==', sender_id)
+                .where('receiver_id', '==', targetReceiverId)
+                .where('status', '==', 'Accepted')
+                .limit(1)
+                .get(),
+            db.collection('exchange_requests')
+                .where('sender_id', '==', targetReceiverId)
+                .where('receiver_id', '==', sender_id)
+                .where('status', '==', 'Accepted')
+                .limit(1)
+                .get()
+        ]);
+
+        if (!acceptedSnap1.empty || !acceptedSnap2.empty) {
+            return res.status(409).json({ message: 'You are already connected as friends with this user' });
+        }
+
+        // 2. Check if a request is already pending in either direction
+        const [pendingSnap1, pendingSnap2] = await Promise.all([
+            db.collection('exchange_requests')
+                .where('sender_id', '==', sender_id)
+                .where('receiver_id', '==', targetReceiverId)
+                .where('status', '==', 'Pending')
+                .limit(1)
+                .get(),
+            db.collection('exchange_requests')
+                .where('sender_id', '==', targetReceiverId)
+                .where('receiver_id', '==', sender_id)
+                .where('status', '==', 'Pending')
+                .limit(1)
+                .get()
+        ]);
+
+        if (!pendingSnap1.empty) {
+            return res.status(409).json({ message: 'Request already sent to this user and is pending' });
+        }
+
+        if (!pendingSnap2.empty) {
+            return res.status(409).json({ message: 'This user has already sent you a pending request. Check your incoming requests to accept!' });
         }
 
         const requestId = await getNextId('exchange_requests');
@@ -474,7 +510,7 @@ exports.sendRequest = async (req, res) => {
         };
 
         await db.collection('exchange_requests').doc(String(requestId)).set(requestData);
-        return res.status(201).json({ message: 'Request sent successfully!' });
+        return res.status(201).json({ message: 'Request sent successfully!', request_id: requestId });
     } catch (err) {
         console.error('Send request error:', err);
         return res.status(500).json({ message: 'Failed to send request' });
@@ -482,31 +518,52 @@ exports.sendRequest = async (req, res) => {
 };
 
 // ==========================================
-// GET MY REQUESTS (received)
+// GET MY REQUESTS (incoming & outgoing)
 // ==========================================
 exports.getRequests = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
 
-        const reqSnap = await db.collection('exchange_requests')
-            .where('receiver_id', '==', userId)
-            .get();
+        const [receiverSnap, senderSnap] = await Promise.all([
+            db.collection('exchange_requests').where('receiver_id', '==', userId).get(),
+            db.collection('exchange_requests').where('sender_id', '==', userId).get()
+        ]);
 
-        const requests = reqSnap.docs.map(doc => doc.data());
+        const requestsMap = new Map();
+        receiverSnap.forEach(doc => requestsMap.set(doc.data().id, doc.data()));
+        senderSnap.forEach(doc => requestsMap.set(doc.data().id, doc.data()));
+
+        const requests = Array.from(requestsMap.values());
         // Sort descending by created_at
         requests.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-        // Join sender info
+        // Cache user info lookups to avoid repeated database hits
+        const userCache = new Map();
+        const getUserData = async (uid) => {
+            if (!uid) return { name: 'Member', image: '' };
+            if (userCache.has(uid)) return userCache.get(uid);
+            try {
+                const uDoc = await db.collection('users').doc(String(uid)).get();
+                if (uDoc.exists) {
+                    const u = uDoc.data();
+                    const data = { name: u.full_name || 'Member', image: u.profile_image || '' };
+                    userCache.set(uid, data);
+                    return data;
+                }
+            } catch (e) {}
+            const fallback = { name: 'Member', image: '' };
+            userCache.set(uid, fallback);
+            return fallback;
+        };
+
         for (const r of requests) {
-            const senderDoc = await db.collection('users').doc(String(r.sender_id)).get();
-            if (senderDoc.exists) {
-                const s = senderDoc.data();
-                r.sender_name = s.full_name;
-                r.sender_image = s.profile_image || '';
-            } else {
-                r.sender_name = 'Member';
-                r.sender_image = '';
-            }
+            const senderData = await getUserData(r.sender_id);
+            r.sender_name = senderData.name;
+            r.sender_image = senderData.image;
+
+            const receiverData = await getUserData(r.receiver_id);
+            r.receiver_name = receiverData.name;
+            r.receiver_image = receiverData.image;
         }
 
         return res.status(200).json({ requests });
@@ -525,15 +582,29 @@ exports.updateRequest = async (req, res) => {
         const requestId = parseInt(req.params.id);
         const { status } = req.body;
 
-        if (!['Accepted', 'Rejected'].includes(status)) {
+        if (!['Accepted', 'Rejected', 'Cancelled'].includes(status)) {
             return res.status(400).json({ message: 'Invalid status' });
         }
 
         const reqRef = db.collection('exchange_requests').doc(String(requestId));
         const reqDoc = await reqRef.get();
 
-        if (!reqDoc.exists || reqDoc.data().receiver_id !== userId) {
+        if (!reqDoc.exists) {
             return res.status(404).json({ message: 'Request not found' });
+        }
+
+        const reqData = reqDoc.data();
+
+        // Sender can cancel their own pending request
+        if (status === 'Cancelled') {
+            if (reqData.sender_id !== userId) {
+                return res.status(403).json({ message: 'Only sender can cancel a request' });
+            }
+        } else {
+            // Receiver can accept or reject
+            if (reqData.receiver_id !== userId) {
+                return res.status(403).json({ message: 'Only receiver can accept or reject a request' });
+            }
         }
 
         await reqRef.update({ status });
@@ -1423,15 +1494,23 @@ exports.cancelCall = (req, res) => {
     res.status(200).json({ message: 'Call ended' });
 };
 
-// SEND CALL SIGNAL (Exchange ICE Candidates)
+// SEND CALL SIGNAL (Exchange ICE Candidates, offer, or answer)
 exports.sendCallSignal = (req, res) => {
     const userId = parseInt(req.user.id);
     const callId = req.body.callId || req.body.call_id;
-    const candidate = req.body.candidate || req.body.payload;
+    const candidate = req.body.candidate || (req.body.type === 'ice' ? req.body.payload : null);
+    const offer = req.body.offer || (req.body.type === 'offer' ? req.body.payload : null);
+    const answer = req.body.answer || (req.body.type === 'answer' ? req.body.payload : null);
     const role = req.body.role || (req.body.type === 'caller' ? 'caller' : 'receiver');
     const call = activeCalls.get(callId);
     if (!call) return res.status(404).json({ message: 'Call not found' });
 
+    if (offer) {
+        call.offer = offer;
+    }
+    if (answer) {
+        call.answer = answer;
+    }
     if (candidate) {
         if (role === 'caller' && call.callerId === userId) {
             call.callerCandidates.push(candidate);
@@ -1442,13 +1521,13 @@ exports.sendCallSignal = (req, res) => {
     res.status(200).json({ status: 'ok' });
 };
 
-// GET CALL SIGNALS (Retrieve ICE Candidates from peer)
+// GET CALL SIGNALS (Retrieve ICE Candidates & signals from peer)
 exports.getCallSignals = (req, res) => {
     const userId = parseInt(req.user.id);
     const { callId } = req.params;
     const { role } = req.query;
     const call = activeCalls.get(callId);
-    if (!call) return res.status(200).json({ candidates: [] });
+    if (!call) return res.status(200).json({ candidates: [], offer: null, answer: null });
 
     let candidates = [];
     if (role === 'caller' && call.callerId === userId) {
@@ -1458,5 +1537,5 @@ exports.getCallSignals = (req, res) => {
         candidates = [...call.callerCandidates];
         call.callerCandidates = [];
     }
-    res.status(200).json({ candidates });
+    res.status(200).json({ candidates, offer: call.offer || null, answer: call.answer || null });
 };

@@ -21,18 +21,27 @@ export function ActiveCallModal() {
 
   const localVideoRef = useRef(null)
   const remoteVideoRef = useRef(null)
+  const remoteAudioRef = useRef(null)
 
   // Attach local stream
   useEffect(() => {
     if (localVideoRef.current && localStream) {
       localVideoRef.current.srcObject = localStream
+      localVideoRef.current.play().catch(() => {})
     }
-  }, [localStream])
+  }, [localStream, isCamOff])
 
   // Attach remote stream
   useEffect(() => {
-    if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream
+    if (remoteStream) {
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remoteStream
+        remoteVideoRef.current.play().catch(() => {})
+      }
+      if (remoteAudioRef.current) {
+        remoteAudioRef.current.srcObject = remoteStream
+        remoteAudioRef.current.play().catch(() => {})
+      }
     }
   }, [remoteStream])
 
@@ -79,12 +88,15 @@ export function ActiveCallModal() {
             playsInline
             className={cn(
               'w-full h-full object-cover',
-              (!isVideo || isCamOff) && 'hidden'
+              !isVideo && 'hidden'
             )}
           />
 
-          {/* Audio Mode or Video Off Placeholder */}
-          {(!isVideo || isCamOff || activeCall.status === 'calling') && (
+          {/* Remote Audio Track Player (Always active for both audio & video) */}
+          <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
+
+          {/* Audio Mode or Video Ringing Placeholder */}
+          {(!isVideo || activeCall.status === 'calling') && (
             <div className="flex flex-col items-center justify-center text-center p-8 space-y-5">
               <div className="relative">
                 <div className="absolute inset-0 rounded-full bg-[#6C63FF]/20 animate-ping" />
@@ -122,58 +134,70 @@ export function ActiveCallModal() {
           )}
 
           {/* Local Video (Picture-in-Picture) */}
-          {isVideo && !isCamOff && (
-            <div className="absolute bottom-6 right-6 w-36 sm:w-52 aspect-video rounded-2xl overflow-hidden border-2 border-slate-700/80 shadow-2xl bg-black z-20">
-              <video
-                ref={localVideoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover -scale-x-100"
-              />
+          {isVideo && (
+            <div className="absolute bottom-6 right-6 w-36 sm:w-52 aspect-video rounded-2xl overflow-hidden border-2 border-slate-700/80 shadow-2xl bg-slate-900 z-20 flex items-center justify-center">
+              {isCamOff ? (
+                <div className="flex flex-col items-center justify-center text-slate-400 gap-1.5 p-2 text-center">
+                  <VideoOff className="w-5 h-5 text-red-400" />
+                  <span className="text-[11px] font-semibold text-slate-300">Camera Off</span>
+                </div>
+              ) : (
+                <video
+                  ref={localVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover -scale-x-100"
+                />
+              )}
             </div>
           )}
         </div>
 
         {/* Floating Bottom Control Bar */}
         <div className="h-20 bg-slate-900/90 backdrop-blur-md border-t border-slate-800 px-6 flex items-center justify-center gap-4 z-20">
-          {/* Mute Mic */}
+          {/* Mute Mic Control */}
           <button
+            type="button"
             onClick={toggleMic}
             className={cn(
-              'w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 cursor-pointer shadow-md',
+              'px-4 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer shadow-md font-semibold text-xs',
               isMicMuted
                 ? 'bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30'
                 : 'bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700'
             )}
             title={isMicMuted ? 'Unmute' : 'Mute'}
           >
-            {isMicMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+            {isMicMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            <span>{isMicMuted ? 'Unmute' : 'Mute'}</span>
           </button>
 
-          {/* Toggle Camera (if video call) */}
+          {/* Toggle Camera Control (Video Call Only) */}
           {isVideo && (
             <button
+              type="button"
               onClick={toggleCam}
               className={cn(
-                'w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 cursor-pointer shadow-md',
+                'px-4 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer shadow-md font-semibold text-xs',
                 isCamOff
                   ? 'bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30'
                   : 'bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700'
               )}
               title={isCamOff ? 'Turn Camera On' : 'Turn Camera Off'}
             >
-              {isCamOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+              {isCamOff ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+              <span>{isCamOff ? 'Camera Off' : 'Camera On'}</span>
             </button>
           )}
 
           {/* End Call Button */}
           <button
+            type="button"
             onClick={endCall}
-            className="px-6 h-12 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold flex items-center gap-2 shadow-lg shadow-red-600/30 active:scale-95 transition-all cursor-pointer"
+            className="px-5 h-12 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold flex items-center gap-2 shadow-lg shadow-red-600/30 active:scale-95 transition-all cursor-pointer text-xs"
             title="End Call"
           >
-            <PhoneOff className="w-5 h-5" />
+            <PhoneOff className="w-4 h-4" />
             <span>End Call</span>
           </button>
         </div>

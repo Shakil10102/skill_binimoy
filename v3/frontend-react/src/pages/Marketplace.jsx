@@ -6,6 +6,7 @@ import { UserCard } from '../components/marketplace/UserCard'
 import { ExchangeModal } from '../components/marketplace/ExchangeModal'
 import { ProfilePreviewModal } from '../components/marketplace/ProfilePreviewModal'
 import { marketplaceService } from '../services/marketplaceService'
+import { requestService } from '../services/requestService'
 import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/ui/Button'
 import {
@@ -30,6 +31,8 @@ export function Marketplace() {
   const initialUserParam = searchParams.get('user') || ''
 
   const [users, setUsers] = useState([])
+  const [friendIds, setFriendIds] = useState(new Set())
+  const [pendingUserIds, setPendingUserIds] = useState(new Set())
   const [trendingSkills, setTrendingSkills] = useState([])
   const [searchQuery, setSearchQuery] = useState(initialSearch)
   const [selectedSkillFilter, setSelectedSkillFilter] = useState(initialSkill)
@@ -48,9 +51,11 @@ export function Marketplace() {
     setLoading(true)
     setError(null)
     try {
-      const [usersRes, trendingRes] = await Promise.allSettled([
+      const [usersRes, trendingRes, friendsRes, requestsRes] = await Promise.allSettled([
         marketplaceService.getAllUsers(),
-        marketplaceService.getTrendingSkills()
+        marketplaceService.getTrendingSkills(),
+        requestService.getFriends(),
+        requestService.getRequests()
       ])
 
       if (usersRes.status === 'fulfilled' && usersRes.value?.users) {
@@ -62,6 +67,23 @@ export function Marketplace() {
       if (trendingRes.status === 'fulfilled' && trendingRes.value?.trending) {
         setTrendingSkills(trendingRes.value.trending)
       }
+
+      const friendsSet = new Set()
+      if (friendsRes.status === 'fulfilled' && friendsRes.value?.friends) {
+        friendsRes.value.friends.forEach((f) => friendsSet.add(f.id))
+      }
+      setFriendIds(friendsSet)
+
+      const pendingSet = new Set()
+      if (requestsRes.status === 'fulfilled' && requestsRes.value?.requests) {
+        requestsRes.value.requests.forEach((r) => {
+          if (r.status === 'Pending') {
+            if (r.sender_id === currentUser?.id) pendingSet.add(r.receiver_id)
+            if (r.receiver_id === currentUser?.id) pendingSet.add(r.sender_id)
+          }
+        })
+      }
+      setPendingUserIds(pendingSet)
     } catch (err) {
       console.error('Marketplace error:', err)
       setError(err.message || 'Unable to connect to the marketplace. Please check your connection.')
@@ -119,8 +141,16 @@ export function Marketplace() {
 
   // Filter & Sort Logic
   const filteredUsers = React.useMemo(() => {
-    // Exclude current user from marketplace exchange list
-    let list = users.filter((u) => u.id !== currentUser?.id)
+    // Exclude:
+    // 1. Current logged-in user
+    // 2. Existing friends
+    // 3. Users with an active pending request
+    let list = users.filter((u) => {
+      if (u.id === currentUser?.id) return false
+      if (friendIds.has(u.id)) return false
+      if (pendingUserIds.has(u.id)) return false
+      return true
+    })
 
     // 1. Search Query Filter
     const q = searchQuery.toLowerCase().trim()
@@ -177,7 +207,7 @@ export function Marketplace() {
     }
 
     return list
-  }, [users, currentUser, searchQuery, selectedSkillFilter, categoryFilter, sortBy])
+  }, [users, currentUser, friendIds, pendingUserIds, searchQuery, selectedSkillFilter, categoryFilter, sortBy])
 
   const handleOpenExchange = (user) => {
     setSelectedUser(user)
@@ -191,6 +221,7 @@ export function Marketplace() {
 
   const handleSuccessProposal = () => {
     setToastMessage('Exchange request sent successfully!')
+    fetchMarketplaceData()
     setTimeout(() => setToastMessage(''), 4000)
   }
 
@@ -450,15 +481,24 @@ export function Marketplace() {
             animate="show"
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-1"
           >
-            {filteredUsers.map((u) => (
-              <UserCard
-                key={u.id}
-                user={u}
-                onProposeExchange={handleOpenExchange}
-                onViewProfile={handleOpenPreview}
-                onSkillClick={(skillName) => handleSkillChipClick(skillName)}
-              />
-            ))}
+            {filteredUsers.map((u) => {
+              const relStatus = friendIds.has(u.id)
+                ? 'friends'
+                : pendingUserIds.has(u.id)
+                ? 'pending'
+                : 'none'
+
+              return (
+                <UserCard
+                  key={u.id}
+                  user={u}
+                  relationshipStatus={relStatus}
+                  onProposeExchange={handleOpenExchange}
+                  onViewProfile={handleOpenPreview}
+                  onSkillClick={(skillName) => handleSkillChipClick(skillName)}
+                />
+              )
+            })}
           </motion.div>
         )}
 

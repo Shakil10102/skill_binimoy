@@ -4,9 +4,9 @@ import { Card } from '../ui/Card'
 import { Avatar } from '../ui/Avatar'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
-import { ArrowLeftRight, BookOpen, GraduationCap, Eye, UserCheck } from 'lucide-react'
+import { ArrowLeftRight, BookOpen, GraduationCap, Eye, UserCheck, Clock } from 'lucide-react'
 
-export function UserCard({ user, onProposeExchange, onViewProfile, onSkillClick }) {
+export function UserCard({ user, relationshipStatus = 'none', onProposeExchange, onViewProfile, onSkillClick }) {
   const teachSkills = user.skills_teach || []
   const learnSkills = user.skills_learn || []
 
@@ -38,15 +38,15 @@ export function UserCard({ user, onProposeExchange, onViewProfile, onSkillClick 
 
             <div className="flex-1 min-w-0 text-left">
               <div className="flex items-center gap-2">
-                <h4
+                <h3
                   onClick={() => onViewProfile && onViewProfile(user)}
-                  className="font-bold text-base text-white truncate group-hover:text-[#00C2FF] transition-colors cursor-pointer"
+                  className="font-bold text-base text-white truncate cursor-pointer hover:text-[#00C2FF] transition-colors"
                 >
                   {user.full_name}
-                </h4>
+                </h3>
               </div>
-              <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-                {user.bio || 'Skill Binimoy community peer ready to exchange skills.'}
+              <p className="text-xs text-slate-400 line-clamp-2 mt-0.5">
+                {user.bio || 'Skill Binimoy member passionate about learning & sharing.'}
               </p>
             </div>
           </div>
@@ -133,15 +133,37 @@ export function UserCard({ user, onProposeExchange, onViewProfile, onSkillClick 
             <span>Preview</span>
           </Button>
 
-          <Button
-            variant="primary"
-            size="sm"
-            className="flex-1 font-semibold text-xs flex items-center justify-center gap-1.5"
-            onClick={() => onProposeExchange(user)}
-          >
-            <ArrowLeftRight className="w-3.5 h-3.5" />
-            <span>Exchange</span>
-          </Button>
+          {relationshipStatus === 'friends' ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled
+              className="flex-1 font-semibold text-xs flex items-center justify-center gap-1.5 opacity-80 cursor-not-allowed bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+            >
+              <UserCheck className="w-3.5 h-3.5" />
+              <span>Friends</span>
+            </Button>
+          ) : relationshipStatus === 'pending' ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled
+              className="flex-1 font-semibold text-xs flex items-center justify-center gap-1.5 opacity-80 cursor-not-allowed bg-amber-500/10 text-amber-400 border border-amber-500/20"
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>Request Pending</span>
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              size="sm"
+              className="flex-1 font-semibold text-xs flex items-center justify-center gap-1.5"
+              onClick={() => onProposeExchange(user)}
+            >
+              <ArrowLeftRight className="w-3.5 h-3.5" />
+              <span>Send Request</span>
+            </Button>
+          )}
         </div>
       </Card>
     </motion.div>

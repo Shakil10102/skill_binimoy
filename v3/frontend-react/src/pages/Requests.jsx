@@ -93,8 +93,8 @@ export function Requests() {
 
   // Filter requests based on tabs
   const filteredRequests = requests.filter((r) => {
-    if (activeTab === 'incoming') return r.receiver_id === user?.id
-    if (activeTab === 'outgoing') return r.sender_id === user?.id
+    if (activeTab === 'incoming') return r.receiver_id === user?.id && r.status === 'Pending'
+    if (activeTab === 'outgoing') return r.sender_id === user?.id && r.status === 'Pending'
     if (activeTab === 'accepted') return r.status === 'Accepted'
     if (activeTab === 'pending') return r.status === 'Pending'
     return true
@@ -109,8 +109,8 @@ export function Requests() {
     },
     {
       id: 'outgoing',
-      label: 'Outgoing',
-      count: requests.filter((r) => r.sender_id === user?.id).length
+      label: 'Sent Pending',
+      count: requests.filter((r) => r.sender_id === user?.id && r.status === 'Pending').length
     },
     {
       id: 'accepted',
@@ -149,7 +149,7 @@ export function Requests() {
           <div className="space-y-4">
             {filteredRequests.map((r) => {
               const isIncoming = r.receiver_id === user?.id
-              const partnerName = isIncoming ? r.sender_name : r.receiver_name
+              const partnerName = isIncoming ? (r.sender_name || 'Member') : (r.receiver_name || 'Member')
               const partnerImage = isIncoming ? r.sender_image : r.receiver_image
 
               return (
@@ -222,6 +222,17 @@ export function Requests() {
                           <span>Decline</span>
                         </Button>
                       </>
+                    )}
+
+                    {r.status === 'Pending' && !isIncoming && (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleUpdateRequest(r.id, 'Cancelled')}
+                      >
+                        <XCircle className="w-4 h-4" />
+                        <span>Cancel Request</span>
+                      </Button>
                     )}
 
                     {r.status === 'Accepted' && (

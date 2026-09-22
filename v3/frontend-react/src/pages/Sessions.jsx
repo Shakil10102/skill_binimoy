@@ -31,11 +31,17 @@ export function Sessions() {
   }, [])
 
   const handleStartCall = (session, partnerName) => {
+    if (session.status !== 'Upcoming') {
+      alert(`This session is ${session.status.toLowerCase()} and cannot be joined.`)
+      return
+    }
+
     startCall({
       type: 'session',
       targetId: session.id,
       title: `${session.offered_skill} ↔ ${session.requested_skill}`,
-      partnerName
+      partnerName,
+      meetingLink: session.meeting_link
     })
   }
 
@@ -131,15 +137,26 @@ export function Sessions() {
 
                   {/* Action Launch Call */}
                   <div className="pt-2">
-                    <Button
-                      variant="primary"
-                      size="md"
-                      className="font-bold gap-2 shadow-lg shadow-[#6C63FF]/20"
-                      onClick={() => handleStartCall(s, partner)}
-                    >
-                      <Video className="w-4 h-4" />
-                      <span>Start 20-Min Video Call</span>
-                    </Button>
+                    {s.status === 'Upcoming' ? (
+                      <Button
+                        variant="primary"
+                        size="md"
+                        className="font-bold gap-2 shadow-lg shadow-[#6C63FF]/20"
+                        onClick={() => handleStartCall(s, partner)}
+                      >
+                        <Video className="w-4 h-4" />
+                        <span>Join Meeting</span>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        size="md"
+                        disabled
+                        className="font-semibold gap-2 opacity-60 cursor-not-allowed"
+                      >
+                        <span>{s.status === 'Completed' ? 'Session Completed' : 'Session Cancelled'}</span>
+                      </Button>
+                    )}
                   </div>
                 </Card>
               )

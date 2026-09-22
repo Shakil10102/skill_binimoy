@@ -1,12 +1,13 @@
 import { api } from './api'
 
 export const callService = {
-  async initiateCall(receiverId, callType = 'video') {
+  async initiateCall(receiverId, callType = 'video', offer = null) {
     return await api.post('/api/users/call/initiate', {
       receiverId,
       receiver_id: receiverId,
       callType,
-      call_type: callType
+      call_type: callType,
+      offer
     })
   },
 
@@ -34,13 +35,15 @@ export const callService = {
     })
   },
 
-  async sendCallSignal(callId, type, payload) {
+  async sendCallSignal(callId, type, payload, role = 'caller') {
     return await api.post('/api/users/call/signal', {
       callId,
       call_id: callId,
-      role: type,
+      role,
       type,
-      candidate: payload,
+      candidate: type === 'ice' ? payload : undefined,
+      offer: type === 'offer' ? payload : undefined,
+      answer: type === 'answer' ? payload : undefined,
       payload
     })
   },

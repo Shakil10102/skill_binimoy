@@ -8,7 +8,9 @@ export function IncomingCallDialog() {
 
   if (!incomingCall) return null
 
-  const isVideo = incomingCall.call_type === 'video'
+  const isVideo = (incomingCall.callType || incomingCall.call_type || 'video') === 'video'
+  const callerName = incomingCall.callerName || incomingCall.caller_name || 'Exchange Partner'
+  const callerImage = incomingCall.callerImage || incomingCall.caller_avatar || ''
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in select-none">
@@ -18,8 +20,8 @@ export function IncomingCallDialog() {
           <div className="absolute inset-0 rounded-full bg-[#6C63FF]/30 animate-ping" />
           <div className="absolute -inset-3 rounded-full bg-gradient-to-r from-[#6C63FF] to-[#00C2FF] opacity-30 blur-md animate-pulse" />
           <Avatar
-            src={incomingCall.caller_avatar}
-            name={incomingCall.caller_name}
+            src={callerImage}
+            name={callerName}
             size="2xl"
             className="border-4 border-[#00C2FF] relative z-10"
           />
@@ -27,11 +29,11 @@ export function IncomingCallDialog() {
 
         {/* Caller Info */}
         <h3 className="text-2xl font-bold text-white tracking-tight">
-          {incomingCall.caller_name || 'Someone'}
+          {callerName}
         </h3>
         <p className="text-sm font-medium text-[#00C2FF] mt-1 flex items-center justify-center gap-1.5">
           {isVideo ? <Video className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
-          Incoming {isVideo ? 'Video' : 'Audio'} Call...
+          <span>Incoming {isVideo ? 'Video' : 'Audio'} Call...</span>
         </p>
         <p className="text-xs text-slate-400 mt-2">Skill Binimoy Peer Exchange</p>
 

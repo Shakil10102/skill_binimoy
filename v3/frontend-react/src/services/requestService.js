@@ -18,5 +18,9 @@ export const requestService = {
     return await api.put(`/api/users/requests/${requestId}`, {
       status
     })
+  },
+
+  async getFriends() {
+    return await api.get('/api/users/friends')
   }
 }
